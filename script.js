@@ -9,11 +9,15 @@ const products = [
     {id: 4, name: "Elf Bar 1500", price: 1290, category: "disposable"}
 ];
 
-// Показать товары
-function showProducts(category = 'all') {
-    const container = document.getElementById('products');
-    container.innerHTML = '';
+// Корзина
+let cart = [];
 
+// Показать товары
+function showProducts() {
+    const container = document.getElementById('products');
+    if (!container) return;
+
+    container.innerHTML = '';
     products.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
@@ -27,17 +31,40 @@ function showProducts(category = 'all') {
     });
 }
 
-// Корзина
-let cart = [];
-function addToCart(id) {
-    cart.push(id);
+// Добавить в корзину
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    cart.push(product);
     tg.MainButton.setText(`Корзина (${cart.length})`);
     tg.MainButton.show();
+    tg.HapticFeedback.impactOccurred('light'); // вибрация
 }
 
-// Отправка
+// Фильтр по категориям
+document.querySelectorAll('.category').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.category').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // Здесь можно добавить фильтрацию товаров
+    });
+});
+
+// Навигация
+document.querySelectorAll('.nav-item').forEach((btn, index) => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (index === 2) { // Корзина
+            tg.MainButton.show();
+        }
+    });
+});
+
+// Отправка заказа
 tg.MainButton.onClick(() => {
     tg.sendData(JSON.stringify(cart));
+    tg.MainButton.hide();
 });
 
 // Запуск
