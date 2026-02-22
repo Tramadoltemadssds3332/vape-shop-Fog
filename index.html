@@ -16,7 +16,6 @@
                 <h1 class="logo">Fog Shop</h1>
                 <div class="header-icons">
                     <i class="fas fa-search search-icon"></i>
-                    <i class="fas fa-shopping-cart cart-icon"></i>
                 </div>
             </div>
 
@@ -32,17 +31,19 @@
             </div>
         </header>
 
-        <!-- Баннер с акцией -->
-        <div class="banner">
+        <!-- Баннер с акцией (РОЗЫГРЫШ) -->
+        <div class="banner" onclick="navigateTo('raffle')">
             <div class="banner-content">
                 <span class="banner-tag">🎁 РОЗЫГРЫШ</span>
-                <h2>VAPE FLOYD</h2>
+                <h2>Fog Shop</h2>
                 <p>Участвуй и выигрывай!</p>
             </div>
         </div>
 
-        <!-- Товары -->
-        <main class="products-grid" id="products"></main>
+        <!-- Основной контент (страницы) -->
+        <main id="main-content">
+            <!-- Сюда будет подгружаться контент -->
+        </main>
 
         <!-- Нижняя навигация -->
         <nav class="bottom-nav">
@@ -65,9 +66,34 @@
             </button>
         </nav>
 
-        <!-- Кнопка админки (только для админов) -->
+        <!-- Кнопка админки -->
         <div class="admin-button" id="adminBtn" style="display: none;">
             <i class="fas fa-cog"></i>
+        </div>
+
+        <!-- Модальное окно для оформления заказа -->
+        <div class="modal" id="orderModal">
+            <div class="modal-content">
+                <h3>Контактная информация</h3>
+
+                <div class="form-group">
+                    <label>Ваши данные</label>
+                    <input type="text" id="orderName" placeholder="Имя" value="">
+                </div>
+
+                <div class="form-group">
+                    <label>Примечание к заказу</label>
+                    <textarea id="orderComment" placeholder="Комментарии к заказу"></textarea>
+                    <small>Мы передадим эту информацию продавцу, чтобы он мог выполнить ваш заказ.</small>
+                </div>
+
+                <button class="delivery-btn" onclick="selectDelivery()">Выбрать способ доставки</button>
+
+                <div class="modal-buttons">
+                    <button class="modal-btn cancel" onclick="closeModal()">Отмена</button>
+                    <button class="modal-btn confirm" onclick="completeOrder()">Завершить заказ</button>
+                </div>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>

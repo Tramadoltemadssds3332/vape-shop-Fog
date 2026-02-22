@@ -2,7 +2,16 @@ let tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 
-// Данные
+// Данные пользователя
+let user = {
+    id: tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000),
+    username: tg.initDataUnsafe?.user?.username || 'user_' + Math.floor(Math.random() * 1000),
+    firstName: tg.initDataUnsafe?.user?.first_name || 'Пользователь',
+    promoCode: generatePromoCode(),
+    orders: []
+};
+
+// Товары
 let products = [
     {id: 1, name: "HS Bank 100ml", price: 890, category: "liquids", image: "🥤", desc: "Фруктовый микс", stock: true},
     {id: 2, name: "Sadboy 60ml", price: 690, category: "liquids", image: "🍓", desc: "Клубничный джем", stock: true},
@@ -12,16 +21,26 @@ let products = [
     {id: 6, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: true}
 ];
 
+// Корзина и избранное
 let cart = [];
 let favorites = [];
 let currentCategory = 'all';
+let appliedPromo = null;
 let isAdmin = false;
 
-// Проверка админа (здесь можно добавить проверку через Telegram)
+// Генерация промокода
+function generatePromoCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+// Проверка админа (для теста)
 async function checkAdmin() {
-    // Временно включим для теста
-    // В реальности нужно проверять через бота
-    return true;
+    return false; // В реальности проверять через бота
 }
 
 // Инициализация
@@ -30,156 +49,461 @@ async function checkAdmin() {
     if (isAdmin) {
         document.getElementById('adminBtn').style.display = 'flex';
     }
-    showProducts();
+    loadFromStorage();
+    showHome();
 })();
 
-// Показать товары
-function showProducts() {
-    const container = document.getElementById('products');
-    container.innerHTML = '';
+// Загрузка из localStorage
+function loadFromStorage() {
+    const savedCart = localStorage.getItem(`cart_${user.id}`);
+    if (savedCart) cart = JSON.parse(savedCart);
+
+    const savedFav = localStorage.getItem(`fav_${user.id}`);
+    if (savedFav) favorites = JSON.parse(savedFav);
+
+    const savedOrders = localStorage.getItem(`orders_${user.id}`);
+    if (savedOrders) user.orders = JSON.parse(savedOrders);
+
+    updateCartBadge();
+}
+
+// Сохранение
+function saveToStorage() {
+    localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
+    localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
+    localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
+}
+
+// Обновление бейджа корзины
+function updateCartBadge() {
+    document.getElementById('cartBadge').textContent = cart.length;
+}
+
+// ========== СТРАНИЦЫ ==========
+
+// Главная (товары)
+function showHome() {
+    const content = document.getElementById('main-content');
 
     let filtered = products;
     if (currentCategory !== 'all') {
         filtered = products.filter(p => p.category === currentCategory);
     }
 
+    let html = '<div class="products-grid">';
     filtered.forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-            <div class="product-image">${product.image}</div>
-            <div class="product-title">${product.name}</div>
-            <div class="product-price">${product.price} ₽</div>
-            <button class="add-to-cart" onclick="addToCart(${product.id}, event)">
-                <i class="fas fa-cart-plus"></i> В корзину
-            </button>
-            ${isAdmin ? `
-                <div style="display: flex; gap: 5px; margin-top: 10px;">
-                    <button onclick="editProduct(${product.id})" style="flex:1; padding:5px; background:#ffc107; border:none; border-radius:10px;">✏️</button>
-                    <button onclick="deleteProduct(${product.id})" style="flex:1; padding:5px; background:#dc3545; border:none; border-radius:10px; color:white;">🗑️</button>
+        const inFav = favorites.some(f => f.id === product.id);
+        html += `
+            <div class="product-card">
+                <div class="product-image">${product.image}</div>
+                <div class="product-title">${product.name}</div>
+                <div class="product-price">${product.price} ₽</div>
+                <div style="display: flex; gap: 5px;">
+                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">
+                        🛒 В корзину
+                    </button>
+                    <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#ff4757' : '#667eea'}" onclick="toggleFavorite(${product.id})">
+                        ${inFav ? '❤️' : '🤍'}
+                    </button>
                 </div>
-            ` : ''}
+            </div>
         `;
-        container.appendChild(card);
     });
+    html += '</div>';
+
+    content.innerHTML = html;
 }
+
+// Избранное
+function showFavorites() {
+    const content = document.getElementById('main-content');
+
+    if (favorites.length === 0) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-heart-broken"></i>
+                <h3>Избранное пусто</h3>
+                <p>Добавьте товары в избранное</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="products-grid">';
+    favorites.forEach(product => {
+        html += `
+            <div class="product-card">
+                <div class="product-image">${product.image}</div>
+                <div class="product-title">${product.name}</div>
+                <div class="product-price">${product.price} ₽</div>
+                <div style="display: flex; gap: 5px;">
+                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">
+                        🛒 В корзину
+                    </button>
+                    <button class="add-to-cart" style="flex: 1; background: #ff4757" onclick="toggleFavorite(${product.id})">
+                        ❤️
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+
+    content.innerHTML = html;
+}
+
+// Корзина
+function showCart() {
+    const content = document.getElementById('main-content');
+
+    if (cart.length === 0) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>Корзина пуста</h3>
+                <p>Добавьте товары из каталога</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Группировка товаров
+    const grouped = {};
+    cart.forEach(item => {
+        if (!grouped[item.id]) {
+            grouped[item.id] = {...item, count: 0};
+        }
+        grouped[item.id].count++;
+    });
+
+    let subtotal = 0;
+    let html = `
+        <div class="cart-page">
+            <div class="cart-header">
+                <h2>Корзина</h2>
+                <button class="clear-cart" onclick="clearCart()">Очистить</button>
+            </div>
+    `;
+
+    Object.values(grouped).forEach(item => {
+        const itemTotal = item.price * item.count;
+        subtotal += itemTotal;
+
+        html += `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <h4>${item.name}</h4>
+                    <div>
+                        <span class="product-price">${item.price} ₽</span>
+                        ${item.count > 1 ? `<span class="old-price">${itemTotal} ₽</span>` : ''}
+                    </div>
+                </div>
+                <div class="cart-item-controls">
+                    <button onclick="updateCartItem(${item.id}, -1)">−</button>
+                    <span>${item.count}</span>
+                    <button onclick="updateCartItem(${item.id}, 1)">+</button>
+                </div>
+            </div>
+        `;
+    });
+
+    const discount = appliedPromo ? subtotal * 0.05 : 0;
+    const total = subtotal - discount;
+
+    html += `
+            <div class="promo-section">
+                <input type="text" id="promoInput" placeholder="Промокод" value="${appliedPromo || ''}">
+                <button onclick="applyPromo()">Применить</button>
+            </div>
+            
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Товары (${cart.length})</span>
+                    <span>${subtotal} ₽</span>
+                </div>
+                ${appliedPromo ? `
+                <div class="summary-row">
+                    <span>Скидка (5%)</span>
+                    <span>-${discount} ₽</span>
+                </div>
+                ` : ''}
+                <div class="summary-row total">
+                    <span>Итого</span>
+                    <span>${total} ₽</span>
+                </div>
+            </div>
+            
+            <button class="checkout-btn" onclick="checkout()">
+                Перейти к оформлению · ${total} ₽
+            </button>
+        </div>
+    `;
+
+    content.innerHTML = html;
+}
+
+// Профиль
+function showProfile() {
+    const content = document.getElementById('main-content');
+
+    const totalSpent = user.orders.reduce((sum, order) => sum + order.total, 0);
+
+    content.innerHTML = `
+        <div class="profile-page">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    ${user.firstName.charAt(0)}
+                </div>
+                <div class="profile-info">
+                    <h3>${user.firstName}</h3>
+                    <p>@${user.username}</p>
+                    <p>Всего заказов: ${user.orders.length}</p>
+                </div>
+            </div>
+            
+            <div class="promo-card">
+                <div>Промокод за рекомендацию</div>
+                <div class="promo-code">${user.promoCode}</div>
+                <div class="promo-hint">Дайте другу — получит скидку 5%</div>
+            </div>
+            
+            <div class="history-section">
+                <h3>История заказов</h3>
+                ${user.orders.length === 0 ? `
+                    <p style="text-align: center; color: #999; padding: 20px;">У вас пока нет заказов</p>
+                ` : user.orders.map(order => `
+                    <div class="order-item">
+                        <div class="order-header">
+                            <span>Заказ #${order.id}</span>
+                            <span>${order.date}</span>
+                        </div>
+                        <div>${order.items} товаров · ${order.total} ₽</div>
+                        <div class="order-status">${order.status}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// Розыгрыш
+function showRaffle() {
+    const content = document.getElementById('main-content');
+
+    content.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-gift"></i>
+            <h3>РОЗЫГРЫШ</h3>
+            <p>Fog Shop</p>
+            <p style="margin-top: 20px;">Участвуй и выигрывай!</p>
+            <button class="checkout-btn" style="margin-top: 20px;" onclick="participateRaffle()">
+                Участвовать
+            </button>
+        </div>
+    `;
+}
+
+// ========== ДЕЙСТВИЯ ==========
 
 // Добавление в корзину
-function addToCart(id, event) {
-    const product = products.find(p => p.id === id);
-    cart.push(product);
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    cart.push({...product});
+    saveToStorage();
+    updateCartBadge();
 
-    // Анимация
-    const btn = event.target;
-    btn.classList.add('cart-add-animation');
-    setTimeout(() => btn.classList.remove('cart-add-animation'), 300);
-
-    // Обновление бейджа
-    document.getElementById('cartBadge').textContent = cart.length;
-
-    // Виброотклик
     tg.HapticFeedback.impactOccurred('light');
+    tg.showAlert(`${product.name} добавлен в корзину`);
 }
 
-// Редактирование товара (для админов)
-function editProduct(id) {
-    const product = products.find(p => p.id === id);
-    const newName = prompt('Новое название:', product.name);
-    if (newName) product.name = newName;
+// Обновление количества в корзине
+function updateCartItem(productId, delta) {
+    const index = cart.findIndex(item => item.id === productId);
+    if (index === -1) return;
 
-    const newPrice = prompt('Новая цена:', product.price);
-    if (newPrice) product.price = parseInt(newPrice);
+    if (delta > 0) {
+        cart.push({...products.find(p => p.id === productId)});
+    } else {
+        cart.splice(index, 1);
+    }
 
-    showProducts();
+    saveToStorage();
+    updateCartBadge();
+    showCart();
 }
 
-// Удаление товара (для админов)
-function deleteProduct(id) {
-    if (confirm('Удалить товар?')) {
-        products = products.filter(p => p.id !== id);
-        showProducts();
+// Очистка корзины
+function clearCart() {
+    if (confirm('Очистить корзину?')) {
+        cart = [];
+        appliedPromo = null;
+        saveToStorage();
+        updateCartBadge();
+        showCart();
     }
 }
 
-// Фильтр по категориям
+// Избранное
+function toggleFavorite(productId) {
+    const product = products.find(p => p.id === productId);
+    const index = favorites.findIndex(f => f.id === productId);
+
+    if (index === -1) {
+        favorites.push({...product});
+        tg.showAlert('Добавлено в избранное');
+    } else {
+        favorites.splice(index, 1);
+        tg.showAlert('Удалено из избранного');
+    }
+
+    saveToStorage();
+    tg.HapticFeedback.impactOccurred('light');
+    showFavorites();
+}
+
+// Применение промокода
+function applyPromo() {
+    const input = document.getElementById('promoInput').value;
+
+    if (!input) {
+        appliedPromo = null;
+        showCart();
+        return;
+    }
+
+    // Проверяем, не свой ли промокод
+    if (input === user.promoCode) {
+        tg.showAlert('Нельзя использовать свой промокод');
+        return;
+    }
+
+    appliedPromo = input;
+    tg.HapticFeedback.impactOccurred('light');
+    showCart();
+}
+
+// Оформление заказа
+function checkout() {
+    document.getElementById('orderModal').classList.add('show');
+
+    // Заполняем данные пользователя
+    document.getElementById('orderName').value = user.firstName;
+}
+
+// Выбор доставки
+function selectDelivery() {
+    tg.showAlert('Выберите способ доставки в чате с менеджером @fog_shop_manager');
+}
+
+// Завершение заказа
+function completeOrder() {
+    const name = document.getElementById('orderName').value;
+    const comment = document.getElementById('orderComment').value;
+
+    if (!name) {
+        tg.showAlert('Введите имя');
+        return;
+    }
+
+    const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+    const discount = appliedPromo ? subtotal * 0.05 : 0;
+    const total = subtotal - discount;
+
+    // Сохраняем заказ
+    const order = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString(),
+        items: cart.length,
+        total: total,
+        status: 'Новый',
+        name: name,
+        comment: comment,
+        promo: appliedPromo
+    };
+
+    user.orders.push(order);
+    saveToStorage();
+
+    // Отправляем в Telegram
+    const orderText = `
+🆕 Новый заказ!
+👤 Пользователь: @${user.username}
+📦 Товаров: ${cart.length}
+💰 Сумма: ${total} ₽
+📝 Комментарий: ${comment || 'нет'}
+🎫 Промокод: ${appliedPromo || 'нет'}
+    `;
+
+    tg.sendData(JSON.stringify({
+        action: 'new_order',
+        order: order,
+        cart: cart,
+        user: user
+    }));
+
+    // Очищаем корзину
+    cart = [];
+    appliedPromo = null;
+    saveToStorage();
+    updateCartBadge();
+
+    closeModal();
+    tg.showAlert('Заказ отправлен! Менеджер свяжется с вами');
+    showHome();
+}
+
+// Закрытие модального окна
+function closeModal() {
+    document.getElementById('orderModal').classList.remove('show');
+}
+
+// Участие в розыгрыше
+function participateRaffle() {
+    tg.showAlert('Вы участвуете в розыгрыше! Следите за новостями');
+}
+
+// Навигация
+function navigateTo(page) {
+    if (page === 'home') showHome();
+    else if (page === 'favorites') showFavorites();
+    else if (page === 'cart') showCart();
+    else if (page === 'profile') showProfile();
+    else if (page === 'raffle') showRaffle();
+}
+
+// ========== СОБЫТИЯ ==========
+
+// Переключение категорий
 document.querySelectorAll('.category').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.category').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
         currentCategory = btn.dataset.cat;
-        showProducts();
+        showHome();
+    });
+});
 
-        // Анимация
+// Нижняя навигация
+document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        navigateTo(btn.dataset.page);
         tg.HapticFeedback.impactOccurred('light');
     });
 });
 
 // Поиск
 document.querySelector('.search-icon').addEventListener('click', () => {
-    const searchTerm = prompt('Поиск товаров:');
-    if (searchTerm) {
-        const filtered = products.filter(p =>
-            p.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        // Временно показываем результат
-        console.log('Найдено:', filtered);
-    }
+    tg.showAlert('Поиск появится скоро');
 });
 
-// Переключение страниц
-document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const page = btn.dataset.page;
-
-        if (page === 'cart') {
-            if (cart.length === 0) {
-                alert('Корзина пуста');
-            } else {
-                let total = cart.reduce((sum, p) => sum + p.price, 0);
-                alert(`В корзине: ${cart.length} товаров\nСумма: ${total} ₽`);
-            }
-        } else if (page === 'favorites') {
-            alert('Избранное пока пусто');
-        } else if (page === 'profile') {
-            alert('Профиль пользователя');
-        }
-
-        tg.HapticFeedback.impactOccurred('light');
-    });
+// Баннер
+document.querySelector('.banner').addEventListener('click', () => {
+    navigateTo('raffle');
 });
 
 // Админка
 document.getElementById('adminBtn').addEventListener('click', () => {
-    const menu = `
-        Fog Shop - Админка
-        
-        1. Добавить товар
-        2. Изменить цену
-        3. Удалить товар
-    `;
-
-    const choice = prompt(menu + '\n\nВыберите действие:');
-
-    if (choice === '1') {
-        const name = prompt('Название:');
-        const price = prompt('Цена:');
-        const category = prompt('Категория (liquids/pods/disposable/accessories):');
-        if (name && price && category) {
-            const newId = Math.max(...products.map(p => p.id)) + 1;
-            products.push({
-                id: newId,
-                name: name,
-                price: parseInt(price),
-                category: category,
-                image: '🆕',
-                desc: '',
-                stock: true
-            });
-            showProducts();
-        }
-    }
+    tg.showAlert('Панель администратора');
 });
