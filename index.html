@@ -18,8 +18,14 @@
                     <i class="fas fa-search search-icon"></i>
                 </div>
             </div>
+        </header>
 
-            <!-- Категории -->
+        <!-- Категории (выпадающие) -->
+        <div class="categories-section">
+            <div class="categories-header">
+                <span>Категории ▼</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
             <div class="categories-wrapper">
                 <div class="categories" id="categories">
                     <button class="category active" data-cat="all">Все</button>
@@ -29,9 +35,23 @@
                     <button class="category" data-cat="accessories">Аксессуары</button>
                 </div>
             </div>
-        </header>
+        </div>
 
-        <!-- Баннер с акцией (РОЗЫГРЫШ) -->
+        <!-- Сортировка (выпадающая) -->
+        <div class="sort-section">
+            <div class="sort-header">
+                <span>Сортировать по</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="sort-menu">
+                <div class="sort-item active" data-sort="default">По умолчанию</div>
+                <div class="sort-item" data-sort="newest">Новинки</div>
+                <div class="sort-item" data-sort="price_asc">По возрастанию цены</div>
+                <div class="sort-item" data-sort="price_desc">По убыванию цены</div>
+            </div>
+        </div>
+
+        <!-- Баннер с розыгрышем -->
         <div class="banner" onclick="navigateTo('raffle')">
             <div class="banner-content">
                 <span class="banner-tag">🎁 РОЗЫГРЫШ</span>
@@ -40,10 +60,8 @@
             </div>
         </div>
 
-        <!-- Основной контент (страницы) -->
-        <main id="main-content">
-            <!-- Сюда будет подгружаться контент -->
-        </main>
+        <!-- Основной контент -->
+        <main id="main-content"></main>
 
         <!-- Нижняя навигация -->
         <nav class="bottom-nav">
@@ -66,28 +84,30 @@
             </button>
         </nav>
 
-        <!-- Кнопка админки -->
+        <!-- Кнопка админки (только для админов) -->
         <div class="admin-button" id="adminBtn" style="display: none;">
             <i class="fas fa-cog"></i>
         </div>
 
-        <!-- Модальное окно для оформления заказа -->
+        <!-- Модальное окно оформления заказа -->
         <div class="modal" id="orderModal">
             <div class="modal-content">
                 <h3>Контактная информация</h3>
 
                 <div class="form-group">
                     <label>Ваши данные</label>
-                    <input type="text" id="orderName" placeholder="Имя" value="">
+                    <input type="text" id="orderName" placeholder="Имя">
                 </div>
 
                 <div class="form-group">
                     <label>Примечание к заказу</label>
                     <textarea id="orderComment" placeholder="Комментарии к заказу"></textarea>
-                    <small>Мы передадим эту информацию продавцу, чтобы он мог выполнить ваш заказ.</small>
+                    <small>Мы передадим эту информацию продавцу</small>
                 </div>
 
-                <button class="delivery-btn" onclick="selectDelivery()">Выбрать способ доставки</button>
+                <button class="delivery-btn" onclick="tg.showAlert('Выберите способ доставки в чате с менеджером @fog_shop_manager')">
+                    Выбрать способ доставки
+                </button>
 
                 <div class="modal-buttons">
                     <button class="modal-btn cancel" onclick="closeModal()">Отмена</button>
@@ -96,6 +116,7 @@
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

@@ -5,25 +5,26 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: #1a1a1a;
     min-height: 100vh;
 }
 
 .app {
     max-width: 480px;
     margin: 0 auto;
-    background: #f8f9fa;
+    background: #121212;
     min-height: 100vh;
     position: relative;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    color: #ffffff;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
 }
 
 /* Шапка */
 .header {
-    background: white;
-    padding: 15px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    background: #1e1e1e;
+    padding: 20px;
+    border-bottom: 1px solid #333;
 }
 
 .header-top {
@@ -34,50 +35,153 @@ body {
 }
 
 .logo {
-    font-size: 24px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-size: 28px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
 }
 
 .header-icons i {
-    font-size: 20px;
-    color: #333;
+    font-size: 22px;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.header-icons i:hover {
+    color: #a78bfa;
+}
+
+/* Категории и сортировка */
+.categories-section {
+    background: #1e1e1e;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+}
+
+.categories-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
     cursor: pointer;
 }
 
-/* Категории */
+.categories-header span {
+    font-size: 16px;
+    color: #888;
+}
+
+.categories-header i {
+    color: #a78bfa;
+    transition: transform 0.3s;
+}
+
+.categories-header.active i {
+    transform: rotate(180deg);
+}
+
 .categories-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease;
+}
+
+.categories-wrapper.show {
+    max-height: 200px;
 }
 
 .categories {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
-    padding: 5px 0;
 }
 
 .category {
-    padding: 8px 20px;
-    border: none;
-    background: #f0f0f0;
+    padding: 10px 20px;
+    border: 1px solid #333;
+    background: #2a2a2a;
     border-radius: 25px;
     font-size: 14px;
-    white-space: nowrap;
+    color: #888;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .category.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
+    border-color: transparent;
     color: white;
+}
+
+/* Сортировка */
+.sort-section {
+    background: #1e1e1e;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+}
+
+.sort-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.sort-header span {
+    font-size: 16px;
+    color: #888;
+}
+
+.sort-header i {
+    color: #a78bfa;
+    transition: transform 0.3s;
+}
+
+.sort-header.active i {
+    transform: rotate(180deg);
+}
+
+.sort-menu {
+    display: none;
+    margin-top: 15px;
+    background: #2a2a2a;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.sort-menu.show {
+    display: block;
+}
+
+.sort-item {
+    padding: 15px 20px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-bottom: 1px solid #333;
+}
+
+.sort-item:last-child {
+    border-bottom: none;
+}
+
+.sort-item.active {
+    color: #a78bfa;
+    background: #333;
+}
+
+.sort-item.active::after {
+    content: ' ✓';
+    float: right;
+    color: #a78bfa;
 }
 
 /* Баннер */
 .banner {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     margin: 15px;
     border-radius: 20px;
     padding: 20px;
@@ -98,6 +202,13 @@ body {
     font-size: 12px;
     display: inline-block;
     margin-bottom: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.banner h2 {
+    font-size: 28px;
+    margin-bottom: 5px;
+    font-weight: 600;
 }
 
 /* Товары */
@@ -109,40 +220,43 @@ body {
 }
 
 .product-card {
-    background: white;
+    background: #1e1e1e;
     border-radius: 20px;
     padding: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    border: 1px solid #333;
     transition: all 0.3s ease;
     animation: fadeIn 0.5s ease;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+.product-card:hover {
+    transform: translateY(-5px);
+    border-color: #a78bfa;
+    box-shadow: 0 10px 30px rgba(167, 139, 250, 0.2);
 }
 
 .product-image {
     width: 100%;
     height: 120px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: #2a2a2a;
     border-radius: 15px;
     margin-bottom: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 40px;
+    border: 1px solid #333;
 }
 
 .product-title {
-    font-weight: 600;
+    font-weight: 500;
     margin-bottom: 5px;
-    font-size: 14px;
+    font-size: 15px;
+    color: #fff;
 }
 
 .product-price {
-    color: #667eea;
-    font-weight: 700;
+    color: #a78bfa;
+    font-weight: 600;
     font-size: 18px;
     margin-bottom: 10px;
 }
@@ -150,13 +264,14 @@ body {
 .add-to-cart {
     width: 100%;
     padding: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     border: none;
     border-radius: 15px;
     color: white;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 14px;
 }
 
 /* Корзина */
@@ -171,6 +286,11 @@ body {
     margin-bottom: 20px;
 }
 
+.cart-header h2 {
+    font-weight: 500;
+    color: #fff;
+}
+
 .clear-cart {
     background: #ff4757;
     color: white;
@@ -178,26 +298,24 @@ body {
     padding: 8px 15px;
     border-radius: 10px;
     cursor: pointer;
+    font-weight: 500;
 }
 
 .cart-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: white;
+    background: #1e1e1e;
     padding: 15px;
     border-radius: 15px;
     margin-bottom: 10px;
-    animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-    from { opacity: 0; transform: translateX(-20px); }
-    to { opacity: 1; transform: translateX(0); }
+    border: 1px solid #333;
 }
 
 .cart-item-info h4 {
     margin-bottom: 5px;
+    color: #fff;
+    font-weight: 500;
 }
 
 .cart-item-controls {
@@ -210,24 +328,31 @@ body {
     width: 30px;
     height: 30px;
     border: none;
-    background: #f0f0f0;
+    background: #2a2a2a;
     border-radius: 10px;
     cursor: pointer;
     font-size: 18px;
+    color: #fff;
+    transition: all 0.3s;
+}
+
+.cart-item-controls button:hover {
+    background: #a78bfa;
 }
 
 .old-price {
-    color: #999;
+    color: #888;
     text-decoration: line-through;
     font-size: 12px;
     margin-left: 5px;
 }
 
 .cart-summary {
-    background: white;
+    background: #1e1e1e;
     padding: 15px;
     border-radius: 15px;
     margin: 20px 0;
+    border: 1px solid #333;
 }
 
 .summary-row {
@@ -235,14 +360,16 @@ body {
     justify-content: space-between;
     margin-bottom: 10px;
     padding: 5px 0;
+    color: #888;
 }
 
 .summary-row.total {
-    border-top: 2px solid #f0f0f0;
+    border-top: 1px solid #333;
     margin-top: 10px;
     padding-top: 15px;
-    font-weight: bold;
+    font-weight: 600;
     font-size: 18px;
+    color: #fff;
 }
 
 .promo-section {
@@ -254,30 +381,37 @@ body {
 .promo-section input {
     flex: 1;
     padding: 12px;
-    border: 1px solid #ddd;
+    background: #2a2a2a;
+    border: 1px solid #333;
     border-radius: 10px;
     font-size: 16px;
+    color: #fff;
+    font-family: inherit;
+}
+
+.promo-section input::placeholder {
+    color: #666;
 }
 
 .promo-section button {
     padding: 12px 20px;
-    background: #667eea;
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     color: white;
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .checkout-btn {
     width: 100%;
     padding: 15px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     color: white;
     border: none;
     border-radius: 15px;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 500;
     cursor: pointer;
     margin-top: 20px;
 }
@@ -291,69 +425,72 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-    background: white;
+    background: #1e1e1e;
     padding: 20px;
     border-radius: 20px;
     margin-bottom: 20px;
+    border: 1px solid #333;
 }
 
 .profile-avatar {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 40px;
+    font-size: 36px;
     color: white;
+    font-weight: 500;
 }
 
 .profile-info h3 {
     font-size: 20px;
     margin-bottom: 5px;
+    color: #fff;
+    font-weight: 500;
 }
 
 .profile-info p {
-    color: #666;
+    color: #888;
     font-size: 14px;
 }
 
 .promo-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     padding: 20px;
     border-radius: 20px;
     margin-bottom: 20px;
+    color: white;
 }
 
 .promo-code {
     font-size: 24px;
-    font-weight: bold;
+    font-weight: 600;
     letter-spacing: 2px;
     margin: 10px 0;
     text-align: center;
-}
-
-.promo-hint {
-    font-size: 12px;
-    opacity: 0.8;
-    text-align: center;
+    font-family: monospace;
 }
 
 .history-section {
-    background: white;
+    background: #1e1e1e;
     padding: 20px;
     border-radius: 20px;
+    border: 1px solid #333;
 }
 
 .history-section h3 {
     margin-bottom: 15px;
+    color: #fff;
+    font-weight: 500;
 }
 
 .order-item {
     padding: 15px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #333;
+    color: #888;
 }
 
 .order-item:last-child {
@@ -364,12 +501,12 @@ body {
     display: flex;
     justify-content: space-between;
     margin-bottom: 5px;
-    font-weight: 600;
+    font-weight: 500;
+    color: #fff;
 }
 
 .order-status {
-    color: #28a745;
-    font-size: 14px;
+    color: #a78bfa;
 }
 
 /* Нижняя навигация */
@@ -380,11 +517,11 @@ body {
     right: 0;
     max-width: 480px;
     margin: 0 auto;
-    background: white;
+    background: #1e1e1e;
     display: flex;
     justify-content: space-around;
     padding: 10px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #333;
 }
 
 .nav-item {
@@ -395,12 +532,13 @@ body {
     background: none;
     border: none;
     font-size: 12px;
-    color: #999;
+    color: #888;
     cursor: pointer;
+    transition: color 0.3s;
 }
 
 .nav-item.active {
-    color: #667eea;
+    color: #a78bfa;
 }
 
 .nav-item i {
@@ -411,7 +549,7 @@ body {
     position: absolute;
     top: -5px;
     right: -5px;
-    background: #ff4757;
+    background: #ec4899;
     color: white;
     font-size: 10px;
     padding: 2px 5px;
@@ -428,10 +566,11 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.8);
     align-items: center;
     justify-content: center;
     z-index: 2000;
+    backdrop-filter: blur(5px);
 }
 
 .modal.show {
@@ -439,18 +578,19 @@ body {
 }
 
 .modal-content {
-    background: white;
+    background: #1e1e1e;
     padding: 25px;
     border-radius: 25px;
     width: 90%;
     max-width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
+    border: 1px solid #333;
 }
 
 .modal-content h3 {
     margin-bottom: 20px;
     text-align: center;
+    color: #fff;
+    font-weight: 500;
 }
 
 .form-group {
@@ -460,17 +600,20 @@ body {
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    font-weight: 600;
-    color: #333;
+    color: #888;
+    font-size: 14px;
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
     padding: 12px;
-    border: 1px solid #ddd;
+    background: #2a2a2a;
+    border: 1px solid #333;
     border-radius: 10px;
     font-size: 16px;
+    color: #fff;
+    font-family: inherit;
 }
 
 .form-group textarea {
@@ -481,19 +624,26 @@ body {
 .form-group small {
     display: block;
     margin-top: 5px;
-    color: #999;
+    color: #666;
     font-size: 12px;
 }
 
 .delivery-btn {
     width: 100%;
     padding: 15px;
-    background: #f0f0f0;
-    border: none;
+    background: #2a2a2a;
+    border: 1px solid #333;
     border-radius: 10px;
     font-size: 16px;
     cursor: pointer;
     margin-bottom: 20px;
+    color: #888;
+    transition: all 0.3s;
+}
+
+.delivery-btn:hover {
+    border-color: #a78bfa;
+    color: #a78bfa;
 }
 
 .modal-buttons {
@@ -508,44 +658,84 @@ body {
     border-radius: 10px;
     font-size: 16px;
     cursor: pointer;
+    font-weight: 500;
 }
 
 .modal-btn.cancel {
-    background: #f0f0f0;
+    background: #2a2a2a;
+    color: #888;
 }
 
 .modal-btn.confirm {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     color: white;
 }
 
-/* Избранное */
+/* Пустые состояния */
 .empty-state {
     text-align: center;
     padding: 50px 20px;
-    color: #999;
+    color: #888;
 }
 
 .empty-state i {
     font-size: 60px;
     margin-bottom: 20px;
+    color: #333;
 }
 
-/* Админка */
+.empty-state h3 {
+    color: #fff;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+/* Админские кнопки */
+.admin-controls {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.admin-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.edit-btn {
+    background: #a78bfa;
+    color: white;
+}
+
+.delete-btn {
+    background: #ff4757;
+    color: white;
+}
+
+.admin-btn:hover {
+    transform: scale(1.05);
+}
+
 .admin-button {
     position: fixed;
     right: 20px;
     bottom: 80px;
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
     border-radius: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-size: 24px;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
     cursor: pointer;
     z-index: 1000;
 }
