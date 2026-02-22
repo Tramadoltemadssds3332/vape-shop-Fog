@@ -3,34 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VapeStore</title>
+    <title>Fog Shop</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="app">
-        <header>
-            <h1>VapeStore</h1>
-            <div class="balance">0 ₽</div>
+        <!-- Шапка -->
+        <header class="header">
+            <div class="header-top">
+                <h1 class="logo">Fog Shop</h1>
+                <div class="header-icons">
+                    <i class="fas fa-search search-icon"></i>
+                    <i class="fas fa-shopping-cart cart-icon"></i>
+                </div>
+            </div>
+
+            <!-- Категории -->
+            <div class="categories-wrapper">
+                <div class="categories" id="categories">
+                    <button class="category active" data-cat="all">Все</button>
+                    <button class="category" data-cat="disposable">Одноразовые</button>
+                    <button class="category" data-cat="pods">Pod-системы</button>
+                    <button class="category" data-cat="liquids">Жидкости</button>
+                    <button class="category" data-cat="accessories">Аксессуары</button>
+                </div>
+            </div>
         </header>
 
-        <div class="categories">
-            <button class="category active">Все</button>
-            <button class="category">Одноразовые</button>
-            <button class="category">Pod-системы</button>
-            <button class="category">Жидкости</button>
+        <!-- Баннер с акцией -->
+        <div class="banner">
+            <div class="banner-content">
+                <span class="banner-tag">🎁 РОЗЫГРЫШ</span>
+                <h2>VAPE FLOYD</h2>
+                <p>Участвуй и выигрывай!</p>
+            </div>
         </div>
 
-        <div class="banner">🎁 РОЗЫГРЫШ ПРИЗОВ</div>
+        <!-- Товары -->
+        <main class="products-grid" id="products"></main>
 
-        <div class="products" id="products"></div>
-
+        <!-- Нижняя навигация -->
         <nav class="bottom-nav">
-            <button class="nav-item active"><span>🏠</span><span>Главная</span></button>
-            <button class="nav-item"><span>❤️</span><span>Избранное</span></button>
-            <button class="nav-item"><span>🛒</span><span>Корзина</span></button>
-            <button class="nav-item"><span>👤</span><span>Профиль</span></button>
+            <button class="nav-item active" data-page="home">
+                <i class="fas fa-home"></i>
+                <span>Главная</span>
+            </button>
+            <button class="nav-item" data-page="favorites">
+                <i class="fas fa-heart"></i>
+                <span>Избранное</span>
+            </button>
+            <button class="nav-item" data-page="cart">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Корзина</span>
+                <span class="cart-badge" id="cartBadge">0</span>
+            </button>
+            <button class="nav-item" data-page="profile">
+                <i class="fas fa-user"></i>
+                <span>Профиль</span>
+            </button>
         </nav>
+
+        <!-- Кнопка админки (только для админов) -->
+        <div class="admin-button" id="adminBtn" style="display: none;">
+            <i class="fas fa-cog"></i>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
