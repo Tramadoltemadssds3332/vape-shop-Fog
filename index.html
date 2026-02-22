@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VapeStore</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>VapeStore</h1>
+            <div class="balance">0 ₽</div>
+        </header>
+
+        <div class="categories">
+            <button class="category active">Все</button>
+            <button class="category">Одноразовые</button>
+            <button class="category">Pod-системы</button>
+            <button class="category">Жидкости</button>
+        </div>
+
+        <div class="banner">
+            🎁 РОЗЫГРЫШ ПРИЗОВ
+        </div>
+
+        <div class="products" id="products"></div>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active"><span>🏠</span><span>Главная</span></button>
+            <button class="nav-item"><span>❤️</span><span>Избранное</span></button>
+            <button class="nav-item"><span>🛒</span><span>Корзина</span></button>
+            <button class="nav-item"><span>👤</span><span>Профиль</span></button>
+        </nav>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
