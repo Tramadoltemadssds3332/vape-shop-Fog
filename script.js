@@ -64,6 +64,17 @@ let currentPage = 'home';
 let searchQuery = '';
 let workHours = '10:00 - 22:00'; // Рабочее время по умолчанию
 
+// ========== АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ==========
+function startAutoSync() {
+    // Проверяем обновления каждые 15 секунд
+    setInterval(() => {
+        console.log("🔄 Автоматическая синхронизация товаров...");
+        tg.sendData(JSON.stringify({
+            action: 'get_products'
+        }));
+    }, 15000); // 15 секунд
+}
+
 // ========== СИНХРОНИЗАЦИЯ ТОВАРОВ ==========
 async function syncProducts() {
     try {
@@ -75,9 +86,14 @@ async function syncProducts() {
         setTimeout(() => {
             const savedProducts = localStorage.getItem('global_products');
             if (savedProducts) {
-                products = JSON.parse(savedProducts);
-                showNotification('📦 Товары обновлены', 'sync');
-                if (currentPage === 'home') showHome();
+                const newProducts = JSON.parse(savedProducts);
+
+                // Проверяем, изменились ли товары
+                if (JSON.stringify(products) !== JSON.stringify(newProducts)) {
+                    products = newProducts;
+                    showNotification('📦 Товары обновлены!', 'sync');
+                    if (currentPage === 'home') showHome();
+                }
             }
         }, 1000);
     } catch (e) {
@@ -196,7 +212,7 @@ function performSearch() {
                 </div>
                 ${isAdmin() ? `
                 <div class="admin-controls" onclick="event.stopPropagation()">
-                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️ Ред.</button>
+                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️ Цена</button>
                     <button class="admin-btn edit-btn" onclick="editProductDetails(${product.id})">📝 Описание</button>
                     <button class="admin-btn delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
                 </div>
@@ -473,7 +489,8 @@ function updateIndicator() {
 (function init() {
     applyTheme();
     loadFromStorage();
-    syncProducts(); // Загружаем актуальные товары
+    syncProducts();
+    startAutoSync(); // ← ЗАПУСКАЕМ АВТОМАТИЧЕСКУЮ СИНХРОНИЗАЦИЮ
     showHome();
     setTimeout(updateIndicator, 100);
     updateSideMenu();
