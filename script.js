@@ -1,8 +1,10 @@
 let tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
+
 console.log("✅ Telegram WebApp инициализирован");
-console.log("🚀 Скрипт загружен!");
+console.log("✅ Скрипт загружен!");
+console.log("🔍 Версия Telegram WebApp:", tg.version);
 
 // Данные пользователя
 let user = {
@@ -524,9 +526,12 @@ function completeOrder() {
 
     const orderText = `🆕 <b>НОВЫЙ ЗАКАЗ!</b>\n\n👤 <b>Клиент:</b> @${user.username} (${name})\n\n📦 <b>Заказ:</b>\n${itemsList}\n💰 <b>Сумма:</b> ${total} ₽\n${appliedPromo ? `🎫 <b>Промокод:</b> ${appliedPromo} (скидка 5%)\n` : ''}\n📝 <b>Пожелание:</b>\n${comment || '—'}\n\n🕐 <b>Время:</b> ${order.date}`;
 
-    console.log("📤 Отправляю заказ:", orderText);
+    console.log("🔍 Отправляю данные:", JSON.stringify({
+        action: 'new_order',
+        text: orderText
+    }));
 
-    // ===== ЭТО САМОЕ ГЛАВНОЕ =====
+    // ===== ОТПРАВКА В TELEGRAM =====
     tg.sendData(JSON.stringify({
         action: 'new_order',
         text: orderText,
