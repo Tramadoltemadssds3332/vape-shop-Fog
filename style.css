@@ -369,6 +369,7 @@ body {
     transition: all 0.3s;
     animation: cardAppear 0.5s ease-out;
     animation-fill-mode: both;
+    cursor: pointer;
 }
 
 @keyframes cardAppear {
@@ -463,11 +464,6 @@ body {
     font-size: 16px;
     color: #333;
     transition: color 0.3s;
-    cursor: pointer;
-}
-
-.product-title:hover {
-    color: #FF6B6B;
 }
 
 .product-price {
@@ -485,7 +481,6 @@ body {
     display: inline-block;
     margin-bottom: 8px;
     font-weight: 600;
-    cursor: pointer;
 }
 
 .stock-indicator.in-stock {
@@ -573,6 +568,7 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .product-details-image img {
@@ -663,6 +659,26 @@ body {
     font-weight: 600;
 }
 
+.category-tag.liquids {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.category-tag.pods {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.category-tag.disposable {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.category-tag.snus {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+}
+
+.category-tag.plates {
+    background: linear-gradient(135deg, #a8e6cf 0%, #00b894 100%);
+}
+
 .product-details-actions {
     display: flex;
     gap: 10px;
@@ -684,6 +700,11 @@ body {
 .add-to-cart-btn:hover {
     opacity: 0.9;
     transform: scale(0.98);
+}
+
+.add-to-cart-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .favorite-btn {

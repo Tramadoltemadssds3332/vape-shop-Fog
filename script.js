@@ -71,6 +71,7 @@ async function syncProducts() {
             action: 'get_products'
         }));
 
+        // Ждем ответа от бота (упрощенно - проверяем localStorage)
         setTimeout(() => {
             const savedProducts = localStorage.getItem('global_products');
             if (savedProducts) {
@@ -87,13 +88,18 @@ async function syncProducts() {
 function broadcastProducts() {
     if (!isAdmin()) return;
 
+    // Отправляем в бота
     tg.sendData(JSON.stringify({
         action: 'update_products',
         products: products
     }));
 
+    // Сохраняем локально
     localStorage.setItem('global_products', JSON.stringify(products));
-    showNotification('✅ Товары отправлены всем', 'success');
+    showNotification('✅ Товары отправлены всем!', 'success');
+
+    // Обновляем отображение
+    if (currentPage === 'home') showHome();
 }
 
 // ========== ФУНКЦИИ ==========
@@ -171,23 +177,30 @@ function performSearch() {
     results.forEach(product => {
         const inFav = favorites.some(f => f.id === product.id);
         html += `
-            <div class="product-card">
-                <div class="product-image" onclick="showProductDetails(${product.id})">
+            <div class="product-card" onclick="showProductDetails(${product.id})">
+                <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="event.stopPropagation(); ${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
                     ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
                 </div>
-                <div class="product-title" onclick="showProductDetails(${product.id})">${product.name}</div>
+                <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
-                <div style="display: flex; gap: 5px;">
-                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">
+                <div class="stock-indicator">
+                    ${product.stock > 0 ? `✅ ${product.stock}` : '❌ Нет'}
+                </div>
+                <div style="display: flex; gap: 5px;" onclick="event.stopPropagation()">
+                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
                         🛒 В корзину
                     </button>
                     <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#FF6B6B' : 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)'}" onclick="toggleFavorite(${product.id})">
                         ${inFav ? '❤️' : '🤍'}
                     </button>
                 </div>
-                <div class="stock-badge ${product.stock < 5 ? 'low-stock' : ''}">
-                    ${product.stock > 0 ? `✅ В наличии: ${product.stock} шт` : '❌ Нет в наличии'}
+                ${isAdmin() ? `
+                <div class="admin-controls" onclick="event.stopPropagation()">
+                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️ Ред.</button>
+                    <button class="admin-btn edit-btn" onclick="editProductDetails(${product.id})">📝 Описание</button>
+                    <button class="admin-btn delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
                 </div>
+                ` : ''}
             </div>
         `;
     });
@@ -203,20 +216,6 @@ function showProductDetails(productId) {
     const content = document.getElementById('main-content');
     const inFav = favorites.some(f => f.id === product.id);
 
-    // Определяем статус наличия
-    let stockStatus = '';
-    let stockClass = '';
-    if (product.stock <= 0) {
-        stockStatus = '❌ Нет в наличии';
-        stockClass = 'out-of-stock';
-    } else if (product.stock < 5) {
-        stockStatus = `⚠️ Мало: ${product.stock} шт`;
-        stockClass = 'low-stock';
-    } else {
-        stockStatus = `✅ В наличии: ${product.stock} шт`;
-        stockClass = 'in-stock';
-    }
-
     content.innerHTML = `
         <div class="product-details-page">
             <button class="back-button" onclick="showHome()">
@@ -224,7 +223,7 @@ function showProductDetails(productId) {
             </button>
             
             <div class="product-details-card">
-                <div class="product-details-image">
+                <div class="product-details-image" onclick="${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
                     ${product.image.startsWith('data:') ? 
                         `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:20px;">` : 
                         `<div class="product-emoji">${product.image}</div>`
@@ -237,8 +236,8 @@ function showProductDetails(productId) {
                     ${product.price} ₽
                 </div>
                 
-                <div class="product-details-stock ${stockClass}">
-                    ${stockStatus}
+                <div class="product-details-stock ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}">
+                    ${product.stock > 0 ? `✅ В наличии: ${product.stock} шт` : '❌ Нет в наличии'}
                 </div>
                 
                 <div class="product-details-desc">
@@ -253,16 +252,50 @@ function showProductDetails(productId) {
                 </div>
                 
                 <div class="product-details-actions">
-                    <button class="add-to-cart-btn" onclick="addToCart(${product.id})">
+                    <button class="add-to-cart-btn" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
                         🛒 Добавить в корзину
                     </button>
                     <button class="favorite-btn ${inFav ? 'active' : ''}" onclick="toggleFavorite(${product.id})">
                         ${inFav ? '❤️ В избранном' : '🤍 В избранное'}
                     </button>
                 </div>
+                
+                ${isAdmin() ? `
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="admin-btn edit-btn" style="flex:1; padding:12px;" onclick="editProduct(${product.id})">
+                        ✏️ Редактировать товар
+                    </button>
+                    <button class="admin-btn edit-btn" style="flex:1; padding:12px; background:#4ECDC4;" onclick="editProductDetails(${product.id})">
+                        📝 Изменить описание
+                    </button>
+                </div>
+                ` : ''}
             </div>
         </div>
     `;
+}
+
+// ========== РЕДАКТИРОВАНИЕ ОПИСАНИЯ И ЭМОДЗИ ==========
+function editProductDetails(productId) {
+    if (!isAdmin()) return;
+
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const newDesc = prompt('Введите новое описание товара:', product.desc);
+    if (newDesc !== null) {
+        product.desc = newDesc;
+    }
+
+    const newEmoji = prompt('Введите новый эмодзи для товара:', product.image);
+    if (newEmoji !== null) {
+        product.image = newEmoji;
+    }
+
+    saveToStorage();
+    broadcastProducts(); // Отправляем всем!
+    showProductDetails(productId);
+    showNotification('✅ Описание и эмодзи обновлены!', 'success');
 }
 
 // ========== ПОЛУЧЕНИЕ НАЗВАНИЯ КАТЕГОРИИ ==========
@@ -297,9 +330,10 @@ function uploadProductImage(productId) {
                 if (product) {
                     product.image = event.target.result;
                     saveToStorage();
-                    broadcastProducts();
+                    broadcastProducts(); // Отправляем всем!
                     showNotification('✅ Фото загружено и отправлено всем!', 'success');
                     if (currentPage === 'home') showHome();
+                    else showProductDetails(productId);
                 }
             };
             reader.readAsDataURL(file);
@@ -439,7 +473,7 @@ function updateIndicator() {
 (function init() {
     applyTheme();
     loadFromStorage();
-    syncProducts();
+    syncProducts(); // Загружаем актуальные товары
     showHome();
     setTimeout(updateIndicator, 100);
     updateSideMenu();
@@ -461,6 +495,7 @@ function loadFromStorage() {
         const savedOrders = localStorage.getItem(`orders_${user.id}`);
         if (savedOrders) user.orders = JSON.parse(savedOrders);
 
+        // Загружаем глобальные товары
         const globalProducts = localStorage.getItem('global_products');
         if (globalProducts) {
             products = JSON.parse(globalProducts);
@@ -532,31 +567,17 @@ function showHome() {
     filtered.forEach(product => {
         const inFav = favorites.some(f => f.id === product.id);
 
-        // Определяем класс для статуса наличия
-        let stockClass = '';
-        let stockText = '';
-        if (product.stock <= 0) {
-            stockClass = 'out-of-stock';
-            stockText = '❌ Нет';
-        } else if (product.stock < 5) {
-            stockClass = 'low-stock';
-            stockText = `⚠️ ${product.stock}`;
-        } else {
-            stockClass = 'in-stock';
-            stockText = `✅ ${product.stock}`;
-        }
-
         html += `
-            <div class="product-card">
-                <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="${isAdmin() ? `uploadProductImage(${product.id})` : `showProductDetails(${product.id})`}">
+            <div class="product-card" onclick="showProductDetails(${product.id})">
+                <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="event.stopPropagation(); ${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
                     ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
                 </div>
-                <div class="product-title" onclick="showProductDetails(${product.id})">${product.name}</div>
+                <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
-                <div class="stock-indicator ${stockClass}" onclick="showProductDetails(${product.id})">
-                    ${stockText}
+                <div class="stock-indicator">
+                    ${product.stock > 0 ? `✅ ${product.stock}` : '❌ Нет'}
                 </div>
-                <div style="display: flex; gap: 5px;">
+                <div style="display: flex; gap: 5px;" onclick="event.stopPropagation()">
                     <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
                         🛒 В корзину
                     </button>
@@ -565,8 +586,9 @@ function showHome() {
                     </button>
                 </div>
                 ${isAdmin() ? `
-                <div class="admin-controls">
-                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️ Ред.</button>
+                <div class="admin-controls" onclick="event.stopPropagation()">
+                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️ Цена</button>
+                    <button class="admin-btn edit-btn" onclick="editProductDetails(${product.id})">📝 Описание</button>
                     <button class="admin-btn delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
                 </div>
                 ` : ''}
@@ -601,13 +623,16 @@ function showFavorites() {
     let html = '<div class="products-grid">';
     favorites.forEach(product => {
         html += `
-            <div class="product-card">
-                <div class="product-image" onclick="showProductDetails(${product.id})">
+            <div class="product-card" onclick="showProductDetails(${product.id})">
+                <div class="product-image">
                     ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
                 </div>
-                <div class="product-title" onclick="showProductDetails(${product.id})">${product.name}</div>
+                <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
-                <button class="add-to-cart" onclick="addToCart(${product.id})">
+                <div class="stock-indicator">
+                    ${product.stock > 0 ? `✅ ${product.stock}` : '❌ Нет'}
+                </div>
+                <button class="add-to-cart" onclick="event.stopPropagation(); addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
                     🛒 В корзину
                 </button>
             </div>
@@ -769,7 +794,6 @@ function showProfile() {
 
 // ========== РОЗЫГРЫШ ==========
 function showRaffle() {
-    // Открываем пост в Telegram
     tg.openTelegramLink('https://t.me/c/3867496075/42');
 }
 
@@ -1103,9 +1127,6 @@ function editProduct(id) {
     const newPrice = prompt('Цена:', product.price);
     if (newPrice) product.price = parseInt(newPrice);
 
-    const newDesc = prompt('Описание:', product.desc);
-    if (newDesc) product.desc = newDesc;
-
     const newStock = prompt('Количество на складе:', product.stock);
     if (newStock) product.stock = parseInt(newStock);
 
@@ -1113,9 +1134,33 @@ function editProduct(id) {
     if (newCategory) product.category = newCategory;
 
     saveToStorage();
-    broadcastProducts();
-    showHome();
-    showNotification('✅ Товар обновлен и отправлен всем!', 'success');
+    broadcastProducts(); // Отправляем всем!
+    if (currentPage === 'home') showHome();
+    else showProductDetails(id);
+    showNotification('✅ Товар обновлен!', 'success');
+}
+
+function editProductDetails(id) {
+    if (!isAdmin()) return;
+
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+
+    const newDesc = prompt('Введите новое описание:', product.desc);
+    if (newDesc !== null) {
+        product.desc = newDesc;
+    }
+
+    const newEmoji = prompt('Введите новый эмодзи:', product.image);
+    if (newEmoji !== null) {
+        product.image = newEmoji;
+    }
+
+    saveToStorage();
+    broadcastProducts(); // Отправляем всем!
+    if (currentPage === 'home') showHome();
+    else showProductDetails(id);
+    showNotification('✅ Описание обновлено!', 'success');
 }
 
 function deleteProduct(id) {
@@ -1124,7 +1169,7 @@ function deleteProduct(id) {
     if (confirm('Удалить товар?')) {
         products = products.filter(p => p.id !== id);
         saveToStorage();
-        broadcastProducts();
+        broadcastProducts(); // Отправляем всем!
         showHome();
         showNotification('✅ Товар удален у всех!', 'success');
     }
@@ -1158,7 +1203,7 @@ function addNewProduct() {
     });
 
     saveToStorage();
-    broadcastProducts();
+    broadcastProducts(); // Отправляем всем!
     showHome();
     showNotification('✅ Товар добавлен и отправлен всем!', 'success');
 }
