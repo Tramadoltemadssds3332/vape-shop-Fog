@@ -26,29 +26,18 @@ function isAdmin() {
 
 // ========== ТОВАРЫ ==========
 let products = [
-    // Жидкости
     {id: 1, name: "HS Bank 100ml", price: 890, category: "liquids", image: "🥤", desc: "Фруктовый микс", stock: 15, date: "2024-01-01"},
     {id: 2, name: "Sadboy 60ml", price: 690, category: "liquids", image: "🍓", desc: "Клубничный джем", stock: 8, date: "2024-01-02"},
-
-    // Pod-системы
     {id: 3, name: "Pod System X", price: 2490, category: "pods", image: "💨", desc: "Компактная pod-система", stock: 5, date: "2024-01-03"},
     {id: 4, name: "GeekVape Hero", price: 3300, category: "pods", image: "🦸", desc: "Влагозащита IP68", stock: 3, date: "2024-01-05"},
-
-    // Одноразовые
     {id: 5, name: "Elf Bar 1500", price: 1290, category: "disposable", image: "⚡", desc: "1500 затяжек", stock: 12, date: "2024-01-04"},
     {id: 6, name: "HQD Cuvie", price: 990, category: "disposable", image: "💨", desc: "Компактный", stock: 20, date: "2024-01-06"},
-
-    // Аксессуары
     {id: 7, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: 7, date: "2024-01-06"},
     {id: 8, name: "Испарители", price: 390, category: "accessories", image: "⚙️", desc: "Комплект 5 шт", stock: 10, date: "2024-01-07"},
-
-    // Снюс
     {id: 9, name: "Siberia White Dry", price: 550, category: "snus", image: "❄️", desc: "Крепкий снюс", stock: 6, date: "2024-01-08"},
     {id: 10, name: "Odens Cold Dry", price: 520, category: "snus", image: "🧊", desc: "Экстра сильный", stock: 4, date: "2024-01-08"},
     {id: 11, name: "Lyft Freeze", price: 480, category: "snus", image: "💙", desc: "Никотиновые пакеты", stock: 9, date: "2024-01-09"},
     {id: 12, name: "Velo Ice Cool", price: 490, category: "snus", image: "🧊", desc: "Мятный", stock: 11, date: "2024-01-09"},
-
-    // Пластинки
     {id: 13, name: "White Fox", price: 530, category: "plates", image: "🦊", desc: "Никотиновые пластинки", stock: 5, date: "2024-01-10"},
     {id: 14, name: "Zyn Spearmint", price: 510, category: "plates", image: "🌿", desc: "Мятные", stock: 7, date: "2024-01-10"},
     {id: 15, name: "Skruf Cassice", price: 540, category: "plates", image: "🍊", desc: "Апельсин", stock: 3, date: "2024-01-11"},
@@ -63,13 +52,13 @@ let appliedPromo = null;
 let currentPage = 'home';
 let searchQuery = '';
 let workHours = '10:00 - 22:00';
-
-// ========== МГНОВЕННАЯ СИНХРОНИЗАЦИЯ ==========
 let lastProductUpdate = Date.now();
 
+// ========== ФУНКЦИИ СИНХРОНИЗАЦИИ ==========
 function startInstantSync() {
     // Проверяем обновления каждые 3 секунды
     setInterval(() => {
+        console.log("🔄 Проверка обновлений товаров...");
         tg.sendData(JSON.stringify({
             action: 'get_products',
             timestamp: lastProductUpdate
@@ -77,12 +66,23 @@ function startInstantSync() {
     }, 3000);
 }
 
-// ========== СИНХРОНИЗАЦИЯ ТОВАРОВ ==========
 function syncProducts() {
     tg.sendData(JSON.stringify({
         action: 'get_products',
         timestamp: lastProductUpdate
     }));
+
+    setTimeout(() => {
+        const savedProducts = localStorage.getItem('global_products');
+        if (savedProducts) {
+            const newProducts = JSON.parse(savedProducts);
+            if (JSON.stringify(products) !== JSON.stringify(newProducts)) {
+                products = newProducts;
+                showNotification('📦 Товары обновлены!', 'sync');
+                if (currentPage === 'home') showHome();
+            }
+        }
+    }, 1000);
 }
 
 function broadcastProducts() {
@@ -105,7 +105,6 @@ function broadcastProducts() {
 }
 
 // ========== ФУНКЦИИ ==========
-
 function generatePromoCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
@@ -273,7 +272,7 @@ function saveQuickEdit(productId) {
     if (newImage) product.image = newImage;
 
     saveToStorage();
-    broadcastProducts(); // МГНОВЕННАЯ ОТПРАВКА ВСЕМ
+    broadcastProducts();
 
     document.querySelector('.edit-modal')?.remove();
 
@@ -347,7 +346,6 @@ function showProductDetails(productId) {
     `;
 }
 
-// ========== ПОЛУЧЕНИЕ НАЗВАНИЯ КАТЕГОРИИ ==========
 function getCategoryName(category) {
     const categories = {
         'liquids': '💧 Жидкости',
@@ -360,7 +358,6 @@ function getCategoryName(category) {
     return categories[category] || category;
 }
 
-// ========== ЗАГРУЗКА ФОТО ==========
 function uploadProductImage(productId) {
     if (!isAdmin()) {
         showNotification('⛔ Только для админов', 'error');
@@ -379,7 +376,7 @@ function uploadProductImage(productId) {
                 if (product) {
                     product.image = event.target.result;
                     saveToStorage();
-                    broadcastProducts(); // МГНОВЕННАЯ ОТПРАВКА
+                    broadcastProducts();
                     showNotification('✅ Фото загружено и отправлено всем!', 'success');
                     if (currentPage === 'home') showHome();
                     else showProductDetails(productId);
@@ -416,7 +413,6 @@ function generateDateOptions() {
     return options.join('');
 }
 
-// ========== ГЕНЕРАЦИЯ ВАРИАНТОВ ВРЕМЕНИ ==========
 function generateTimeOptions(workHoursStr) {
     try {
         const times = workHoursStr.split('-').map(t => t.trim());
@@ -523,7 +519,7 @@ function updateIndicator() {
     applyTheme();
     loadFromStorage();
     syncProducts();
-    startInstantSync(); // Запускаем мгновенную синхронизацию (каждые 3 сек)
+    startInstantSync();
     showHome();
     setTimeout(updateIndicator, 100);
     updateSideMenu();
@@ -603,7 +599,6 @@ function sortProducts(products) {
     }
 }
 
-// ========== ГЛАВНАЯ СТРАНИЦА ==========
 function showHome() {
     currentPage = 'home';
     toggleFilters(true);
@@ -845,12 +840,9 @@ function showProfile() {
     `;
 }
 
-// ========== РОЗЫГРЫШ ==========
 function showRaffle() {
     tg.openTelegramLink('https://t.me/c/3867496075/42');
 }
-
-// ========== ДЕЙСТВИЯ ==========
 
 function addToCart(productId) {
     const product = products.find(p => p.id === productId);
@@ -949,7 +941,6 @@ function applyPromo() {
     showCart();
 }
 
-// ========== ОФОРМЛЕНИЕ ЗАКАЗА ==========
 function checkout() {
     const modal = document.getElementById('orderModal');
     const nameInput = document.getElementById('orderName');
@@ -1132,8 +1123,6 @@ function completeOrder() {
     showHome();
 }
 
-// ========== АДМИНКА ==========
-
 function showAdminPanel() {
     if (user.id !== MAIN_ADMIN_ID) {
         showNotification('⛔ Только главный админ', 'error');
@@ -1196,12 +1185,10 @@ function addNewProduct() {
     });
 
     saveToStorage();
-    broadcastProducts(); // МГНОВЕННАЯ ОТПРАВКА
+    broadcastProducts();
     showHome();
     showNotification('✅ Товар добавлен и отправлен всем!', 'success');
 }
-
-// ========== НАВИГАЦИЯ ==========
 
 function navigateTo(page) {
     if (page === 'home') showHome();
@@ -1218,8 +1205,6 @@ function navigateTo(page) {
         }
     });
 }
-
-// ========== СОБЫТИЯ ==========
 
 categoriesSlider?.addEventListener('scroll', updateIndicator);
 window.addEventListener('resize', updateIndicator);
@@ -1293,7 +1278,7 @@ if (adminBtn) {
     });
 }
 
-// Добавляем стили для модалки быстрого редактирования
+// Стили для модалки редактирования
 const editModalStyle = document.createElement('style');
 editModalStyle.textContent = `
     .edit-modal {
