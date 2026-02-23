@@ -10,31 +10,54 @@
 </head>
 <body>
     <div class="app">
-        <!-- Шапка -->
+        <!-- Шапка с тремя полосками -->
         <header class="header">
-            <div class="header-top">
-                <h1 class="logo">Fog Shop</h1>
-                <div class="header-icons">
-                    <i class="fas fa-search search-icon"></i>
+            <div class="header-left">
+                <div class="menu-button" id="menuButton">
+                    <i class="fas fa-bars"></i>
                 </div>
+                <h1 class="logo">Fog Shop</h1>
+            </div>
+            <div class="header-right">
+                <i class="fas fa-search search-icon"></i>
             </div>
         </header>
 
-        <!-- Категории -->
-        <div class="categories-section">
-            <div class="categories-header">
-                <span>Категории ▼</span>
-                <i class="fas fa-chevron-down"></i>
+        <!-- Боковое меню (выезжающее) -->
+        <div class="side-menu" id="sideMenu">
+            <div class="side-menu-header">
+                <div class="side-menu-close" id="closeMenu">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div class="side-menu-logo">Fog Shop</div>
             </div>
-            <div class="categories-wrapper">
-                <div class="categories" id="categories">
-                    <button class="category active" data-cat="all">Все</button>
-                    <button class="category" data-cat="disposable">Одноразовые</button>
-                    <button class="category" data-cat="pods">Pod-системы</button>
-                    <button class="category" data-cat="liquids">Жидкости</button>
-                    <button class="category" data-cat="accessories">Аксессуары</button>
+            <div class="side-menu-items">
+                <a href="https://t.me/+ydkHgm09g5hhOTMy" target="_blank" class="side-menu-item">
+                    <i class="fab fa-telegram"></i>
+                    <span>Наш канал Telegram</span>
+                    <i class="fas fa-external-link-alt external-icon"></i>
+                </a>
+                <div class="side-menu-item">
+                    <i class="fas fa-info-circle"></i>
+                    <span>О нас</span>
+                </div>
+                <div class="side-menu-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Помощь</span>
                 </div>
             </div>
+        </div>
+
+        <!-- Подвижная линия категорий -->
+        <div class="categories-wrapper">
+            <div class="categories-slider" id="categoriesSlider">
+                <button class="category active" data-cat="all">Все</button>
+                <button class="category" data-cat="disposable">Одноразовые</button>
+                <button class="category" data-cat="pods">Pod-системы</button>
+                <button class="category" data-cat="liquids">Жидкости</button>
+                <button class="category" data-cat="accessories">Аксессуары</button>
+            </div>
+            <div class="slider-indicator" id="sliderIndicator"></div>
         </div>
 
         <!-- Сортировка -->
@@ -45,22 +68,22 @@
             </div>
             <div class="sort-menu">
                 <div class="sort-item active" data-sort="default">По умолчанию</div>
-                <div class="sort-item" data-sort="newest">Новинки</div>
-                <div class="sort-item" data-sort="price_asc">По возрастанию цены</div>
-                <div class="sort-item" data-sort="price_desc">По убыванию цены</div>
+                <div class="sort-item" data-sort="newest">✨ Новинки</div>
+                <div class="sort-item" data-sort="price_asc">💰 По возрастанию цены</div>
+                <div class="sort-item" data-sort="price_desc">💸 По убыванию цены</div>
             </div>
         </div>
 
-        <!-- Баннер -->
+        <!-- Баннер с анимацией -->
         <div class="banner" onclick="navigateTo('raffle')">
             <div class="banner-content">
-                <span class="banner-tag">🎁 РОЗЫГРЫШ</span>
+                <span class="banner-tag">🎉 РОЗЫГРЫШ</span>
                 <h2>Fog Shop</h2>
                 <p>Участвуй и выигрывай!</p>
             </div>
         </div>
 
-        <!-- Контент -->
+        <!-- Основной контент -->
         <main id="main-content"></main>
 
         <!-- Нижняя навигация -->
@@ -105,18 +128,17 @@
                     <small>Мы передадим эту информацию продавцу</small>
                 </div>
 
-                <button class="delivery-btn" onclick="alert('Выберите способ доставки в чате с менеджером @fog_shop_manager')">
-                    Выбрать способ доставки
-                </button>
-
                 <div class="modal-buttons">
                     <button class="modal-btn cancel" onclick="closeModal()">Отмена</button>
                     <button class="modal-btn confirm" onclick="completeOrder()">Завершить заказ</button>
                 </div>
             </div>
         </div>
+
+        <!-- Затемнение фона для меню -->
+        <div class="overlay" id="overlay"></div>
     </div>
 
-    <script src="script.js?v=3"></script>
+    <script src="script.js"></script>
 </body>
 </html>

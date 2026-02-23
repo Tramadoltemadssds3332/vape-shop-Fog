@@ -2,9 +2,7 @@ let tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 
-console.log("✅ Telegram WebApp инициализирован");
-console.log("✅ Скрипт загружен!");
-console.log("🔍 Версия Telegram WebApp:", tg.version);
+console.log("✅ Fog Shop загружен");
 
 // Данные пользователя
 let user = {
@@ -40,6 +38,7 @@ let currentSort = 'default';
 let appliedPromo = null;
 let currentPage = 'home';
 
+// Генерация промокода
 function generatePromoCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
@@ -49,39 +48,58 @@ function generatePromoCode() {
     return code;
 }
 
-// Альтернативная отправка через HTTP
-function sendOrderViaHTTP(orderText) {
-    const botToken = '8384387938:AAEuhsPHVOAGZHDVOjCx9L9hqBMsTmDf-Rg';
-    const chatId = '7602382626'; // ID менеджера
+// Боковое меню
+const menuButton = document.getElementById('menuButton');
+const sideMenu = document.getElementById('sideMenu');
+const closeMenu = document.getElementById('closeMenu');
+const overlay = document.getElementById('overlay');
 
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+function openMenu() {
+    sideMenu.classList.add('open');
+    overlay.classList.add('show');
+}
 
-    console.log("📤 Отправка через HTTP...");
+function closeMenuFunc() {
+    sideMenu.classList.remove('open');
+    overlay.classList.remove('show');
+}
 
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            chat_id: chatId,
-            text: orderText,
-            parse_mode: 'HTML'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('✅ Отправлено через HTTP:', data);
-    })
-    .catch(error => {
-        console.error('❌ Ошибка HTTP:', error);
-    });
+menuButton?.addEventListener('click', openMenu);
+closeMenu?.addEventListener('click', closeMenuFunc);
+overlay?.addEventListener('click', closeMenuFunc);
+
+// Подвижная линия категорий
+const categoriesSlider = document.getElementById('categoriesSlider');
+const indicator = document.getElementById('sliderIndicator');
+
+function updateIndicator() {
+    const activeCategory = document.querySelector('.category.active');
+    if (activeCategory && indicator) {
+        const container = categoriesSlider;
+        const index = Array.from(container.children).indexOf(activeCategory);
+
+        let left = 0;
+        let width = 0;
+
+        for (let i = 0; i <= index; i++) {
+            const category = container.children[i];
+            if (i < index) {
+                left += category.offsetWidth + 15; // 15 - это gap
+            } else {
+                width = category.offsetWidth;
+            }
+        }
+
+        indicator.style.left = left + 'px';
+        indicator.style.width = width + 'px';
+    }
 }
 
 // Инициализация
 (function init() {
     loadFromStorage();
     showHome();
+    setTimeout(updateIndicator, 100);
 
     if (isAdmin()) {
         const adminBtn = document.getElementById('adminBtn');
@@ -89,6 +107,7 @@ function sendOrderViaHTTP(orderText) {
     }
 })();
 
+// Загрузка из localStorage
 function loadFromStorage() {
     try {
         const savedCart = localStorage.getItem(`cart_${user.id}`);
@@ -100,7 +119,7 @@ function loadFromStorage() {
         const savedOrders = localStorage.getItem(`orders_${user.id}`);
         if (savedOrders) user.orders = JSON.parse(savedOrders);
     } catch (e) {
-        console.log('Error loading from storage');
+        console.log('Ошибка загрузки');
     }
 
     updateCartBadge();
@@ -112,7 +131,7 @@ function saveToStorage() {
         localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
         localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
     } catch (e) {
-        console.log('Error saving to storage');
+        console.log('Ошибка сохранения');
     }
 }
 
@@ -122,7 +141,7 @@ function updateCartBadge() {
 }
 
 function toggleFilters(show) {
-    const categoriesSection = document.querySelector('.categories-section');
+    const categoriesSection = document.querySelector('.categories-wrapper');
     const sortSection = document.querySelector('.sort-section');
     const banner = document.querySelector('.banner');
 
@@ -175,7 +194,7 @@ function showHome() {
                     <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">
                         🛒 В корзину
                     </button>
-                    <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#ec4899' : '#a78bfa'}" onclick="toggleFavorite(${product.id})">
+                    <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#FF6B6B' : 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)'}" onclick="toggleFavorite(${product.id})">
                         ${inFav ? '❤️' : '🤍'}
                     </button>
                 </div>
@@ -191,6 +210,7 @@ function showHome() {
     html += '</div>';
 
     content.innerHTML = html;
+    setTimeout(updateIndicator, 100);
 }
 
 function showFavorites() {
@@ -203,9 +223,10 @@ function showFavorites() {
     if (favorites.length === 0) {
         content.innerHTML = `
             <div class="empty-state">
-                <i class="fas fa-heart-broken"></i>
-                <h3>Избранное пусто</h3>
-                <p>Добавьте товары в избранное</p>
+                <i class="fas fa-heart" style="color: #FF6B6B;"></i>
+                <h3>В избранном пусто</h3>
+                <p>Добавляйте понравившиеся товары в избранное, чтобы не потерять</p>
+                <button onclick="navigateTo('home')">Вернуться к покупкам</button>
             </div>
         `;
         return;
@@ -239,9 +260,10 @@ function showCart() {
     if (cart.length === 0) {
         content.innerHTML = `
             <div class="empty-state">
-                <i class="fas fa-shopping-cart"></i>
-                <h3>Корзина пуста</h3>
+                <i class="fas fa-shopping-cart" style="color: #4ECDC4;"></i>
+                <h3>В корзине пусто</h3>
                 <p>Добавьте товары из каталога</p>
+                <button onclick="navigateTo('home')">Вернуться к покупкам</button>
             </div>
         `;
         return;
@@ -273,7 +295,7 @@ function showCart() {
                 <div class="cart-item-info">
                     <h4>${item.name}</h4>
                     <div>
-                        <span class="product-price">${item.price} ₽</span>
+                        <span style="color: #FF6B6B; font-weight: 600;">${item.price} ₽</span>
                         ${item.count > 1 ? `<span class="old-price">${itemTotal} ₽</span>` : ''}
                     </div>
                 </div>
@@ -330,7 +352,7 @@ function showProfile() {
 
     let ordersHtml = '';
     if (user.orders.length === 0) {
-        ordersHtml = '<p style="text-align: center; color: #888; padding: 20px;">Нет заказов</p>';
+        ordersHtml = '<p style="text-align: center; color: #999; padding: 20px;">У вас пока нет заказов</p>';
     } else {
         ordersHtml = user.orders.map(order => `
             <div class="order-item">
@@ -358,13 +380,13 @@ function showProfile() {
             </div>
             
             <div class="promo-card">
-                <div>Ваш промокод</div>
+                <div>🎁 Ваш промокод</div>
                 <div class="promo-code">${user.promoCode}</div>
-                <div style="font-size: 12px; opacity: 0.8;">Дайте другу — получит скидку 5%</div>
+                <div style="font-size: 12px; opacity: 0.9;">Дайте другу — получит скидку 5%</div>
             </div>
             
             <div class="history-section">
-                <h3>История заказов</h3>
+                <h3>📜 История заказов</h3>
                 ${ordersHtml}
             </div>
             
@@ -386,11 +408,11 @@ function showRaffle() {
 
     content.innerHTML = `
         <div class="empty-state">
-            <i class="fas fa-gift"></i>
-            <h3>РОЗЫГРЫШ</h3>
+            <i class="fas fa-gift" style="color: #4ECDC4;"></i>
+            <h3>🎉 РОЗЫГРЫШ</h3>
             <p>Fog Shop</p>
             <p style="margin-top: 20px;">Участвуй и выигрывай!</p>
-            <button class="checkout-btn" style="margin-top: 20px;" onclick="participateRaffle()">
+            <button style="margin-top: 20px;" onclick="participateRaffle()">
                 Участвовать
             </button>
         </div>
@@ -408,7 +430,29 @@ function addToCart(productId) {
     updateCartBadge();
 
     tg.HapticFeedback.impactOccurred('light');
-    alert(`${product.name} добавлен в корзину`);
+
+    // Анимированное уведомление (без алерта)
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-size: 14px;
+        z-index: 2000;
+        animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    `;
+    notification.textContent = `${product.name} добавлен в корзину`;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
 }
 
 function updateCartItem(productId, delta) {
@@ -445,16 +489,40 @@ function toggleFavorite(productId) {
 
     if (index === -1) {
         favorites.push({...product});
-        alert('➕ В избранное');
+        showNotification('❤️ Добавлено в избранное', 'heart');
     } else {
         favorites.splice(index, 1);
-        alert('➖ Из избранного');
+        showNotification('💔 Удалено из избранного', 'heart-broken');
     }
 
     saveToStorage();
     tg.HapticFeedback.impactOccurred('light');
     if (currentPage === 'favorites') showFavorites();
     else if (currentPage === 'home') showHome();
+}
+
+function showNotification(text, icon) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-size: 14px;
+        z-index: 2000;
+        animation: slideDown 0.3s, fadeOut 0.3s 1.7s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    `;
+    notification.innerHTML = `${icon === 'heart' ? '❤️' : '💔'} ${text}`;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 2000);
 }
 
 function applyPromo() {
@@ -494,17 +562,14 @@ function closeModal() {
     if (modal) modal.classList.remove('show');
 }
 
-// ========== ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ ЗАКАЗА ==========
+// ========== ОТПРАВКА ЗАКАЗА ==========
 function completeOrder() {
     console.log("🚀 НАЖАТА КНОПКА ЗАВЕРШИТЬ ЗАКАЗ");
 
     const nameInput = document.getElementById('orderName');
     const commentInput = document.getElementById('orderComment');
 
-    if (!nameInput) {
-        console.error("❌ Нет поля nameInput");
-        return;
-    }
+    if (!nameInput) return;
 
     const name = nameInput.value.trim();
     const comment = commentInput ? commentInput.value.trim() : '';
@@ -519,8 +584,6 @@ function completeOrder() {
         closeModal();
         return;
     }
-
-    console.log("📦 Корзина:", cart);
 
     const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
     const discount = appliedPromo ? subtotal * 0.05 : 0;
@@ -555,41 +618,53 @@ function completeOrder() {
 
     const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 Клиент: @${user.username} (${name})\n\n📦 Заказ:\n${itemsList}\n💰 Сумма: ${total} ₽\n${appliedPromo ? `🎫 Промокод: ${appliedPromo} (скидка 5%)\n` : ''}\n📝 Пожелание:\n${comment || '—'}\n\n🕐 Время: ${order.date}`;
 
-    console.log("🔍 Отправляю данные:", JSON.stringify({
+    // Отправляем через Telegram WebApp
+    tg.sendData(JSON.stringify({
         action: 'new_order',
         text: orderText
     }));
 
-    // ===== ОТПРАВКА В TELEGRAM ЧЕРЕЗ WEBS App =====
-    tg.sendData(JSON.stringify({
-        action: 'new_order',
-        text: orderText,
-        order: order,
-        cart: cart,
-        user: {
-            id: user.id,
-            username: user.username,
-            name: user.firstName
-        }
-    }));
-
-    // ===== АЛЬТЕРНАТИВНАЯ ОТПРАВКА ЧЕРЕЗ HTTP =====
-    sendOrderViaHTTP(orderText);
-
-    console.log("✅ Данные отправлены в Telegram");
-
+    // Очищаем корзину
     cart = [];
     appliedPromo = null;
     saveToStorage();
     updateCartBadge();
 
     closeModal();
-    alert('✅ Заказ отправлен! Менеджер свяжется с вами');
+
+    // Показываем уведомление
+    showNotification('✅ Заказ отправлен! Менеджер свяжется с вами', 'success');
     showHome();
 }
 
+function showNotification(text, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 30px;
+        font-size: 14px;
+        z-index: 2000;
+        animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        text-align: center;
+        min-width: 200px;
+    `;
+    notification.textContent = text;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
 function participateRaffle() {
-    alert('Вы участвуете в розыгрыше! Следите за новостями');
+    showNotification('🎉 Вы участвуете в розыгрыше!', 'raffle');
 }
 
 // ========== АДМИНКА ==========
@@ -611,13 +686,13 @@ function showAdminPanel() {
         const newAdmin = prompt('Введите ID нового админа:');
         if (newAdmin && !admins.includes(parseInt(newAdmin))) {
             admins.push(parseInt(newAdmin));
-            alert('Админ добавлен!');
+            alert('✅ Админ добавлен!');
         }
     } else if (action === '2') {
         const removeAdmin = prompt('Введите ID админа для удаления:');
         if (removeAdmin && parseInt(removeAdmin) !== MAIN_ADMIN_ID) {
             admins = admins.filter(id => id !== parseInt(removeAdmin));
-            alert('Админ удален!');
+            alert('✅ Админ удален!');
         }
     }
 }
@@ -700,18 +775,11 @@ function navigateTo(page) {
 
 // ========== СОБЫТИЯ ==========
 
-const categoriesHeader = document.querySelector('.categories-header');
-if (categoriesHeader) {
-    categoriesHeader.addEventListener('click', () => {
-        const wrapper = document.querySelector('.categories-wrapper');
-        const header = document.querySelector('.categories-header');
-        if (wrapper && header) {
-            wrapper.classList.toggle('show');
-            header.classList.toggle('active');
-        }
-    });
-}
+// Обновление индикатора при скролле
+categoriesSlider?.addEventListener('scroll', updateIndicator);
+window.addEventListener('resize', updateIndicator);
 
+// Сортировка
 const sortHeader = document.querySelector('.sort-header');
 if (sortHeader) {
     sortHeader.addEventListener('click', () => {
@@ -745,6 +813,7 @@ document.querySelectorAll('.category').forEach(btn => {
         document.querySelectorAll('.category').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentCategory = btn.dataset.cat;
+        updateIndicator();
 
         if (currentPage === 'home') showHome();
     });
@@ -760,7 +829,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 const searchIcon = document.querySelector('.search-icon');
 if (searchIcon) {
     searchIcon.addEventListener('click', () => {
-        alert('Поиск появится скоро');
+        showNotification('🔍 Поиск появится скоро', 'search');
     });
 }
 
@@ -779,3 +848,18 @@ if (adminBtn) {
         }
     });
 }
+
+// Добавляем анимации
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from { opacity: 0; transform: translate(-50%, -20px); }
+        to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
