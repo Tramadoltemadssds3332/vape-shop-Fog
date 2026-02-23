@@ -36,7 +36,6 @@ let currentSort = 'default';
 let appliedPromo = null;
 let currentPage = 'home';
 
-// Генерация промокода
 function generatePromoCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
@@ -57,7 +56,6 @@ function generatePromoCode() {
     }
 })();
 
-// Загрузка из localStorage
 function loadFromStorage() {
     try {
         const savedCart = localStorage.getItem(`cart_${user.id}`);
@@ -75,7 +73,6 @@ function loadFromStorage() {
     updateCartBadge();
 }
 
-// Сохранение в localStorage
 function saveToStorage() {
     try {
         localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
@@ -86,13 +83,11 @@ function saveToStorage() {
     }
 }
 
-// Обновление счетчика корзины
 function updateCartBadge() {
     const badge = document.getElementById('cartBadge');
     if (badge) badge.textContent = cart.length;
 }
 
-// Показывать/скрывать фильтры
 function toggleFilters(show) {
     const categoriesSection = document.querySelector('.categories-section');
     const sortSection = document.querySelector('.sort-section');
@@ -105,7 +100,6 @@ function toggleFilters(show) {
     }
 }
 
-// Сортировка товаров
 function sortProducts(products) {
     switch(currentSort) {
         case 'price_asc':
@@ -121,7 +115,6 @@ function sortProducts(products) {
 
 // ========== СТРАНИЦЫ ==========
 
-// Главная
 function showHome() {
     currentPage = 'home';
     toggleFilters(true);
@@ -167,7 +160,6 @@ function showHome() {
     content.innerHTML = html;
 }
 
-// Избранное
 function showFavorites() {
     currentPage = 'favorites';
     toggleFilters(false);
@@ -204,7 +196,6 @@ function showFavorites() {
     content.innerHTML = html;
 }
 
-// Корзина
 function showCart() {
     currentPage = 'cart';
     toggleFilters(false);
@@ -297,7 +288,6 @@ function showCart() {
     content.innerHTML = html;
 }
 
-// Профиль (ИСПРАВЛЕНО)
 function showProfile() {
     currentPage = 'profile';
     toggleFilters(false);
@@ -354,7 +344,6 @@ function showProfile() {
     `;
 }
 
-// Розыгрыш
 function showRaffle() {
     currentPage = 'raffle';
     toggleFilters(false);
@@ -377,7 +366,6 @@ function showRaffle() {
 
 // ========== ДЕЙСТВИЯ ==========
 
-// Добавление в корзину
 function addToCart(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -390,7 +378,6 @@ function addToCart(productId) {
     tg.showAlert(`${product.name} добавлен в корзину`);
 }
 
-// Обновление количества
 function updateCartItem(productId, delta) {
     const index = cart.findIndex(item => item.id === productId);
     if (index === -1) return;
@@ -407,7 +394,6 @@ function updateCartItem(productId, delta) {
     if (currentPage === 'cart') showCart();
 }
 
-// Очистка корзины
 function clearCart() {
     if (confirm('Очистить корзину?')) {
         cart = [];
@@ -418,7 +404,6 @@ function clearCart() {
     }
 }
 
-// Избранное
 function toggleFavorite(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -439,7 +424,6 @@ function toggleFavorite(productId) {
     else if (currentPage === 'home') showHome();
 }
 
-// Применение промокода
 function applyPromo() {
     const input = document.getElementById('promoInput');
     if (!input) return;
@@ -462,7 +446,6 @@ function applyPromo() {
     showCart();
 }
 
-// Оформление заказа
 function checkout() {
     const modal = document.getElementById('orderModal');
     const nameInput = document.getElementById('orderName');
@@ -473,13 +456,12 @@ function checkout() {
     }
 }
 
-// Закрытие модалки
 function closeModal() {
     const modal = document.getElementById('orderModal');
     if (modal) modal.classList.remove('show');
 }
 
-// Завершение заказа (ИСПРАВЛЕНО)
+// ========== ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ ЗАКАЗА ==========
 function completeOrder() {
     const nameInput = document.getElementById('orderName');
     const commentInput = document.getElementById('orderComment');
@@ -527,6 +509,7 @@ function completeOrder() {
 
     const orderText = `🆕 <b>НОВЫЙ ЗАКАЗ!</b>\n\n👤 <b>Клиент:</b> @${user.username} (${name})\n\n📦 <b>Заказ:</b>\n${itemsList}\n💰 <b>Сумма:</b> ${total} ₽\n${appliedPromo ? `🎫 <b>Промокод:</b> ${appliedPromo} (скидка 5%)\n` : ''}\n📝 <b>Пожелание:</b>\n${comment || '—'}\n\n🕐 <b>Время:</b> ${order.date}`;
 
+    // ===== ЭТО ГЛАВНАЯ СТРОКА ОТПРАВКИ =====
     tg.sendData(JSON.stringify({
         action: 'new_order',
         text: orderText,
@@ -538,6 +521,7 @@ function completeOrder() {
             name: user.firstName
         }
     }));
+    // ========================================
 
     cart = [];
     appliedPromo = null;
@@ -549,14 +533,12 @@ function completeOrder() {
     showHome();
 }
 
-// Участие в розыгрыше
 function participateRaffle() {
     tg.showAlert('Вы участвуете в розыгрыше! Следите за новостями');
 }
 
 // ========== АДМИНКА ==========
 
-// Панель управления админами
 function showAdminPanel() {
     if (user.id !== MAIN_ADMIN_ID) {
         tg.showAlert('Только главный админ');
@@ -585,7 +567,6 @@ function showAdminPanel() {
     }
 }
 
-// Редактирование товара
 function editProduct(id) {
     if (!isAdmin()) return;
 
@@ -605,7 +586,6 @@ function editProduct(id) {
     showHome();
 }
 
-// Удаление товара
 function deleteProduct(id) {
     if (!isAdmin()) return;
 
@@ -616,7 +596,6 @@ function deleteProduct(id) {
     }
 }
 
-// Добавление товара
 function addNewProduct() {
     if (!isAdmin()) return;
 
@@ -666,7 +645,6 @@ function navigateTo(page) {
 
 // ========== СОБЫТИЯ ==========
 
-// Категории
 const categoriesHeader = document.querySelector('.categories-header');
 if (categoriesHeader) {
     categoriesHeader.addEventListener('click', () => {
@@ -679,7 +657,6 @@ if (categoriesHeader) {
     });
 }
 
-// Сортировка
 const sortHeader = document.querySelector('.sort-header');
 if (sortHeader) {
     sortHeader.addEventListener('click', () => {
@@ -692,7 +669,6 @@ if (sortHeader) {
     });
 }
 
-// Выбор сортировки
 document.querySelectorAll('.sort-item').forEach(item => {
     item.addEventListener('click', () => {
         document.querySelectorAll('.sort-item').forEach(i => i.classList.remove('active'));
@@ -709,7 +685,6 @@ document.querySelectorAll('.sort-item').forEach(item => {
     });
 });
 
-// Выбор категории
 document.querySelectorAll('.category').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.category').forEach(b => b.classList.remove('active'));
@@ -720,7 +695,6 @@ document.querySelectorAll('.category').forEach(btn => {
     });
 });
 
-// Нижняя навигация
 document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
         navigateTo(btn.dataset.page);
@@ -728,7 +702,6 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     });
 });
 
-// Поиск
 const searchIcon = document.querySelector('.search-icon');
 if (searchIcon) {
     searchIcon.addEventListener('click', () => {
@@ -736,7 +709,6 @@ if (searchIcon) {
     });
 }
 
-// Баннер
 const banner = document.querySelector('.banner');
 if (banner) {
     banner.addEventListener('click', () => {
@@ -744,7 +716,6 @@ if (banner) {
     });
 }
 
-// Кнопка админки
 const adminBtn = document.getElementById('adminBtn');
 if (adminBtn) {
     adminBtn.addEventListener('click', () => {
