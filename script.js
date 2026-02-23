@@ -524,7 +524,7 @@ function completeOrder() {
     user.orders.push(order);
     saveToStorage();
 
-    const orderText = `🆕 <b>НОВЫЙ ЗАКАЗ!</b>\n\n👤 <b>Клиент:</b> @${user.username} (${name})\n\n📦 <b>Заказ:</b>\n${itemsList}\n💰 <b>Сумма:</b> ${total} ₽\n${appliedPromo ? `🎫 <b>Промокод:</b> ${appliedPromo} (скидка 5%)\n` : ''}\n📝 <b>Пожелание:</b>\n${comment || '—'}\n\n🕐 <b>Время:</b> ${order.date}`;
+    const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 Клиент: @${user.username} (${name})\n\n📦 Заказ:\n${itemsList}\n💰 Сумма: ${total} ₽\n${appliedPromo ? `🎫 Промокод: ${appliedPromo} (скидка 5%)\n` : ''}\n📝 Пожелание:\n${comment || '—'}\n\n🕐 Время: ${order.date}`;
 
     console.log("🔍 Отправляю данные:", JSON.stringify({
         action: 'new_order',
