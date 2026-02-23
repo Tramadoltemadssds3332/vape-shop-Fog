@@ -475,27 +475,15 @@ body {
 
 /* Индикатор наличия */
 .stock-indicator {
-    font-size: 12px;
-    padding: 4px 10px;
+    font-size: 13px;
+    padding: 5px 12px;
     border-radius: 20px;
     display: inline-block;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-weight: 600;
-}
-
-.stock-indicator.in-stock {
     background: rgba(78, 205, 196, 0.15);
     color: #4ECDC4;
-}
-
-.stock-indicator.low-stock {
-    background: rgba(255, 193, 7, 0.15);
-    color: #ffc107;
-}
-
-.stock-indicator.out-of-stock {
-    background: rgba(255, 107, 107, 0.15);
-    color: #FF6B6B;
+    border: 1px solid rgba(78, 205, 196, 0.3);
 }
 
 .add-to-cart {
@@ -551,10 +539,10 @@ body {
 }
 
 .product-details-card {
-    background: var(--card-bg);
+    background: #ffffff;
     border-radius: 25px;
     padding: 20px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #f0f0f0;
     box-shadow: 0 5px 20px rgba(0,0,0,0.05);
 }
 
@@ -585,7 +573,7 @@ body {
 .product-details-title {
     font-size: 26px;
     font-weight: 700;
-    color: var(--text-color);
+    color: #333;
     margin-bottom: 10px;
 }
 
@@ -604,43 +592,28 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.product-details-stock.in-stock {
     background: rgba(78, 205, 196, 0.1);
     color: #4ECDC4;
     border-left: 4px solid #4ECDC4;
 }
 
-.product-details-stock.low-stock {
-    background: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
-    border-left: 4px solid #ffc107;
-}
-
-.product-details-stock.out-of-stock {
-    background: rgba(255, 107, 107, 0.1);
-    color: #FF6B6B;
-    border-left: 4px solid #FF6B6B;
-}
-
 .product-details-desc {
-    background: var(--surface-color);
+    background: #f8f9fa;
     padding: 15px;
     border-radius: 15px;
     margin-bottom: 20px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #f0f0f0;
 }
 
 .product-details-desc h3 {
     font-size: 16px;
-    color: var(--text-color);
+    color: #333;
     margin-bottom: 10px;
     font-weight: 700;
 }
 
 .product-details-desc p {
-    color: var(--text-secondary);
+    color: #666;
     line-height: 1.6;
     font-size: 15px;
 }
@@ -710,10 +683,10 @@ body {
 .favorite-btn {
     flex: 1;
     padding: 15px;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
     border-radius: 15px;
-    color: var(--text-color);
+    color: #333;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
@@ -1756,14 +1729,6 @@ body.dark-mode .back-button {
 
 body.dark-mode .product-details-stock.in-stock {
     background: rgba(78, 205, 196, 0.05);
-}
-
-body.dark-mode .product-details-stock.low-stock {
-    background: rgba(255, 193, 7, 0.05);
-}
-
-body.dark-mode .product-details-stock.out-of-stock {
-    background: rgba(255, 107, 107, 0.05);
 }
 
 /* ========== АНИМАЦИИ ========== */

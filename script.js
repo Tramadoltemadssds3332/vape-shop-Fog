@@ -62,59 +62,45 @@ let currentSort = 'default';
 let appliedPromo = null;
 let currentPage = 'home';
 let searchQuery = '';
-let workHours = '10:00 - 22:00'; // Рабочее время по умолчанию
+let workHours = '10:00 - 22:00';
 
-// ========== АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ==========
-function startAutoSync() {
-    // Проверяем обновления каждые 15 секунд
+// ========== МГНОВЕННАЯ СИНХРОНИЗАЦИЯ ==========
+let lastProductUpdate = Date.now();
+
+function startInstantSync() {
+    // Проверяем обновления каждые 3 секунды
     setInterval(() => {
-        console.log("🔄 Автоматическая синхронизация товаров...");
         tg.sendData(JSON.stringify({
-            action: 'get_products'
+            action: 'get_products',
+            timestamp: lastProductUpdate
         }));
-    }, 15000); // 15 секунд
+    }, 3000);
 }
 
 // ========== СИНХРОНИЗАЦИЯ ТОВАРОВ ==========
-async function syncProducts() {
-    try {
-        tg.sendData(JSON.stringify({
-            action: 'get_products'
-        }));
-
-        // Ждем ответа от бота (упрощенно - проверяем localStorage)
-        setTimeout(() => {
-            const savedProducts = localStorage.getItem('global_products');
-            if (savedProducts) {
-                const newProducts = JSON.parse(savedProducts);
-
-                // Проверяем, изменились ли товары
-                if (JSON.stringify(products) !== JSON.stringify(newProducts)) {
-                    products = newProducts;
-                    showNotification('📦 Товары обновлены!', 'sync');
-                    if (currentPage === 'home') showHome();
-                }
-            }
-        }, 1000);
-    } catch (e) {
-        console.log('Ошибка синхронизации');
-    }
+function syncProducts() {
+    tg.sendData(JSON.stringify({
+        action: 'get_products',
+        timestamp: lastProductUpdate
+    }));
 }
 
 function broadcastProducts() {
     if (!isAdmin()) return;
 
-    // Отправляем в бота
+    lastProductUpdate = Date.now();
+
     tg.sendData(JSON.stringify({
         action: 'update_products',
-        products: products
+        products: products,
+        timestamp: lastProductUpdate
     }));
 
-    // Сохраняем локально
     localStorage.setItem('global_products', JSON.stringify(products));
+    localStorage.setItem('last_update', lastProductUpdate.toString());
+
     showNotification('✅ Товары отправлены всем!', 'success');
 
-    // Обновляем отображение
     if (currentPage === 'home') showHome();
 }
 
@@ -200,7 +186,7 @@ function performSearch() {
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <div class="stock-indicator">
-                    ${product.stock > 0 ? `✅ ${product.stock}` : '❌ Нет'}
+                    ✅ В наличии: ${product.stock}
                 </div>
                 <div style="display: flex; gap: 5px;" onclick="event.stopPropagation()">
                     <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
@@ -212,9 +198,7 @@ function performSearch() {
                 </div>
                 ${isAdmin() ? `
                 <div class="admin-controls" onclick="event.stopPropagation()">
-                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️ Цена</button>
-                    <button class="admin-btn edit-btn" onclick="editProductDetails(${product.id})">📝 Описание</button>
-                    <button class="admin-btn delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
+                    <button class="admin-btn edit-btn" onclick="quickEditProduct(${product.id})">✏️ Быстрое редактирование</button>
                 </div>
                 ` : ''}
             </div>
@@ -222,6 +206,81 @@ function performSearch() {
     });
     html += '</div>';
     resultsDiv.innerHTML = html;
+}
+
+// ========== БЫСТРОЕ РЕДАКТИРОВАНИЕ ==========
+function quickEditProduct(productId) {
+    if (!isAdmin()) return;
+
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <h3>✏️ Быстрое редактирование</h3>
+            
+            <div class="edit-field">
+                <label>Название:</label>
+                <input type="text" id="editName" value="${product.name}">
+            </div>
+            
+            <div class="edit-field">
+                <label>Цена (₽):</label>
+                <input type="number" id="editPrice" value="${product.price}">
+            </div>
+            
+            <div class="edit-field">
+                <label>В наличии (шт):</label>
+                <input type="number" id="editStock" value="${product.stock}">
+            </div>
+            
+            <div class="edit-field">
+                <label>Описание:</label>
+                <textarea id="editDesc" rows="3">${product.desc}</textarea>
+            </div>
+            
+            <div class="edit-field">
+                <label>Эмодзи:</label>
+                <input type="text" id="editImage" value="${product.image}" placeholder="🥤">
+            </div>
+            
+            <div class="edit-buttons">
+                <button class="edit-btn cancel" onclick="this.closest('.edit-modal').remove()">Отмена</button>
+                <button class="edit-btn save" onclick="saveQuickEdit(${productId})">💾 Сохранить</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+function saveQuickEdit(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const newName = document.getElementById('editName')?.value;
+    const newPrice = document.getElementById('editPrice')?.value;
+    const newStock = document.getElementById('editStock')?.value;
+    const newDesc = document.getElementById('editDesc')?.value;
+    const newImage = document.getElementById('editImage')?.value;
+
+    if (newName) product.name = newName;
+    if (newPrice) product.price = parseInt(newPrice);
+    if (newStock) product.stock = parseInt(newStock);
+    if (newDesc) product.desc = newDesc;
+    if (newImage) product.image = newImage;
+
+    saveToStorage();
+    broadcastProducts(); // МГНОВЕННАЯ ОТПРАВКА ВСЕМ
+
+    document.querySelector('.edit-modal')?.remove();
+
+    if (currentPage === 'home') showHome();
+    else showProductDetails(productId);
+
+    showNotification('✅ Товар обновлен и отправлен всем!', 'success');
 }
 
 // ========== ДЕТАЛЬНАЯ ИНФОРМАЦИЯ О ТОВАРЕ ==========
@@ -252,8 +311,8 @@ function showProductDetails(productId) {
                     ${product.price} ₽
                 </div>
                 
-                <div class="product-details-stock ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}">
-                    ${product.stock > 0 ? `✅ В наличии: ${product.stock} шт` : '❌ Нет в наличии'}
+                <div class="product-details-stock in-stock">
+                    ✅ В наличии: ${product.stock} шт
                 </div>
                 
                 <div class="product-details-desc">
@@ -278,40 +337,14 @@ function showProductDetails(productId) {
                 
                 ${isAdmin() ? `
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="admin-btn edit-btn" style="flex:1; padding:12px;" onclick="editProduct(${product.id})">
-                        ✏️ Редактировать товар
-                    </button>
-                    <button class="admin-btn edit-btn" style="flex:1; padding:12px; background:#4ECDC4;" onclick="editProductDetails(${product.id})">
-                        📝 Изменить описание
+                    <button class="admin-btn edit-btn" style="flex:1; padding:12px;" onclick="quickEditProduct(${product.id})">
+                        ✏️ Быстрое редактирование
                     </button>
                 </div>
                 ` : ''}
             </div>
         </div>
     `;
-}
-
-// ========== РЕДАКТИРОВАНИЕ ОПИСАНИЯ И ЭМОДЗИ ==========
-function editProductDetails(productId) {
-    if (!isAdmin()) return;
-
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-
-    const newDesc = prompt('Введите новое описание товара:', product.desc);
-    if (newDesc !== null) {
-        product.desc = newDesc;
-    }
-
-    const newEmoji = prompt('Введите новый эмодзи для товара:', product.image);
-    if (newEmoji !== null) {
-        product.image = newEmoji;
-    }
-
-    saveToStorage();
-    broadcastProducts(); // Отправляем всем!
-    showProductDetails(productId);
-    showNotification('✅ Описание и эмодзи обновлены!', 'success');
 }
 
 // ========== ПОЛУЧЕНИЕ НАЗВАНИЯ КАТЕГОРИИ ==========
@@ -327,7 +360,7 @@ function getCategoryName(category) {
     return categories[category] || category;
 }
 
-// ========== ЗАГРУЗКА ФОТО ДЛЯ АДМИНОВ ==========
+// ========== ЗАГРУЗКА ФОТО ==========
 function uploadProductImage(productId) {
     if (!isAdmin()) {
         showNotification('⛔ Только для админов', 'error');
@@ -346,7 +379,7 @@ function uploadProductImage(productId) {
                 if (product) {
                     product.image = event.target.result;
                     saveToStorage();
-                    broadcastProducts(); // Отправляем всем!
+                    broadcastProducts(); // МГНОВЕННАЯ ОТПРАВКА
                     showNotification('✅ Фото загружено и отправлено всем!', 'success');
                     if (currentPage === 'home') showHome();
                     else showProductDetails(productId);
@@ -490,7 +523,7 @@ function updateIndicator() {
     applyTheme();
     loadFromStorage();
     syncProducts();
-    startAutoSync(); // ← ЗАПУСКАЕМ АВТОМАТИЧЕСКУЮ СИНХРОНИЗАЦИЮ
+    startInstantSync(); // Запускаем мгновенную синхронизацию (каждые 3 сек)
     showHome();
     setTimeout(updateIndicator, 100);
     updateSideMenu();
@@ -512,10 +545,14 @@ function loadFromStorage() {
         const savedOrders = localStorage.getItem(`orders_${user.id}`);
         if (savedOrders) user.orders = JSON.parse(savedOrders);
 
-        // Загружаем глобальные товары
         const globalProducts = localStorage.getItem('global_products');
         if (globalProducts) {
             products = JSON.parse(globalProducts);
+        }
+
+        const savedLastUpdate = localStorage.getItem('last_update');
+        if (savedLastUpdate) {
+            lastProductUpdate = parseInt(savedLastUpdate);
         }
     } catch (e) {
         console.log('Ошибка загрузки');
@@ -530,6 +567,7 @@ function saveToStorage() {
         localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
         localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
         localStorage.setItem('global_products', JSON.stringify(products));
+        localStorage.setItem('last_update', lastProductUpdate.toString());
     } catch (e) {
         console.log('Ошибка сохранения');
     }
@@ -592,7 +630,7 @@ function showHome() {
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <div class="stock-indicator">
-                    ${product.stock > 0 ? `✅ ${product.stock}` : '❌ Нет'}
+                    ✅ В наличии: ${product.stock}
                 </div>
                 <div style="display: flex; gap: 5px;" onclick="event.stopPropagation()">
                     <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
@@ -604,9 +642,7 @@ function showHome() {
                 </div>
                 ${isAdmin() ? `
                 <div class="admin-controls" onclick="event.stopPropagation()">
-                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️ Цена</button>
-                    <button class="admin-btn edit-btn" onclick="editProductDetails(${product.id})">📝 Описание</button>
-                    <button class="admin-btn delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
+                    <button class="admin-btn edit-btn" onclick="quickEditProduct(${product.id})">✏️ Быстрое редактирование</button>
                 </div>
                 ` : ''}
             </div>
@@ -647,7 +683,7 @@ function showFavorites() {
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <div class="stock-indicator">
-                    ${product.stock > 0 ? `✅ ${product.stock}` : '❌ Нет'}
+                    ✅ В наличии: ${product.stock}
                 </div>
                 <button class="add-to-cart" onclick="event.stopPropagation(); addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
                     🛒 В корзину
@@ -1132,66 +1168,6 @@ function showAdminPanel() {
     }
 }
 
-function editProduct(id) {
-    if (!isAdmin()) return;
-
-    const product = products.find(p => p.id === id);
-    if (!product) return;
-
-    const newName = prompt('Название:', product.name);
-    if (newName) product.name = newName;
-
-    const newPrice = prompt('Цена:', product.price);
-    if (newPrice) product.price = parseInt(newPrice);
-
-    const newStock = prompt('Количество на складе:', product.stock);
-    if (newStock) product.stock = parseInt(newStock);
-
-    const newCategory = prompt('Категория (liquids/pods/disposable/accessories/snus/plates):', product.category);
-    if (newCategory) product.category = newCategory;
-
-    saveToStorage();
-    broadcastProducts(); // Отправляем всем!
-    if (currentPage === 'home') showHome();
-    else showProductDetails(id);
-    showNotification('✅ Товар обновлен!', 'success');
-}
-
-function editProductDetails(id) {
-    if (!isAdmin()) return;
-
-    const product = products.find(p => p.id === id);
-    if (!product) return;
-
-    const newDesc = prompt('Введите новое описание:', product.desc);
-    if (newDesc !== null) {
-        product.desc = newDesc;
-    }
-
-    const newEmoji = prompt('Введите новый эмодзи:', product.image);
-    if (newEmoji !== null) {
-        product.image = newEmoji;
-    }
-
-    saveToStorage();
-    broadcastProducts(); // Отправляем всем!
-    if (currentPage === 'home') showHome();
-    else showProductDetails(id);
-    showNotification('✅ Описание обновлено!', 'success');
-}
-
-function deleteProduct(id) {
-    if (!isAdmin()) return;
-
-    if (confirm('Удалить товар?')) {
-        products = products.filter(p => p.id !== id);
-        saveToStorage();
-        broadcastProducts(); // Отправляем всем!
-        showHome();
-        showNotification('✅ Товар удален у всех!', 'success');
-    }
-}
-
 function addNewProduct() {
     if (!isAdmin()) return;
 
@@ -1220,7 +1196,7 @@ function addNewProduct() {
     });
 
     saveToStorage();
-    broadcastProducts(); // Отправляем всем!
+    broadcastProducts(); // МГНОВЕННАЯ ОТПРАВКА
     showHome();
     showNotification('✅ Товар добавлен и отправлен всем!', 'success');
 }
@@ -1316,3 +1292,109 @@ if (adminBtn) {
         }
     });
 }
+
+// Добавляем стили для модалки быстрого редактирования
+const editModalStyle = document.createElement('style');
+editModalStyle.textContent = `
+    .edit-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+        backdrop-filter: blur(5px);
+    }
+    
+    .edit-modal-content {
+        background: var(--surface-color);
+        padding: 25px;
+        border-radius: 25px;
+        width: 90%;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .edit-modal-content h3 {
+        margin-bottom: 20px;
+        color: var(--text-color);
+        text-align: center;
+    }
+    
+    .edit-field {
+        margin-bottom: 15px;
+    }
+    
+    .edit-field label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 14px;
+    }
+    
+    .edit-field input,
+    .edit-field textarea {
+        width: 100%;
+        padding: 12px;
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-color);
+        font-size: 16px;
+    }
+    
+    .edit-field input:focus,
+    .edit-field textarea:focus {
+        outline: none;
+        border-color: #FF6B6B;
+    }
+    
+    .edit-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .edit-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .edit-btn.cancel {
+        background: var(--border-color);
+        color: var(--text-secondary);
+    }
+    
+    .edit-btn.save {
+        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+        color: white;
+    }
+    
+    .edit-btn:hover {
+        transform: scale(0.98);
+    }
+    
+    .dark-mode .edit-modal-content {
+        background: #1e1e1e;
+        border: 1px solid #333;
+    }
+    
+    .dark-mode .edit-field input,
+    .dark-mode .edit-field textarea {
+        background: #2d2d2d;
+        border-color: #404040;
+        color: #fff;
+    }
+`;
+document.head.appendChild(editModalStyle);
