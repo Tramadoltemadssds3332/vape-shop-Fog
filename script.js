@@ -49,6 +49,35 @@ function generatePromoCode() {
     return code;
 }
 
+// Альтернативная отправка через HTTP
+function sendOrderViaHTTP(orderText) {
+    const botToken = '8384387938:AAEuhsPHVOAGZHDVOjCx9L9hqBMsTmDf-Rg';
+    const chatId = '7602382626'; // ID менеджера
+
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    console.log("📤 Отправка через HTTP...");
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            chat_id: chatId,
+            text: orderText,
+            parse_mode: 'HTML'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('✅ Отправлено через HTTP:', data);
+    })
+    .catch(error => {
+        console.error('❌ Ошибка HTTP:', error);
+    });
+}
+
 // Инициализация
 (function init() {
     loadFromStorage();
@@ -531,7 +560,7 @@ function completeOrder() {
         text: orderText
     }));
 
-    // ===== ОТПРАВКА В TELEGRAM =====
+    // ===== ОТПРАВКА В TELEGRAM ЧЕРЕЗ WEBS App =====
     tg.sendData(JSON.stringify({
         action: 'new_order',
         text: orderText,
@@ -543,6 +572,9 @@ function completeOrder() {
             name: user.firstName
         }
     }));
+
+    // ===== АЛЬТЕРНАТИВНАЯ ОТПРАВКА ЧЕРЕЗ HTTP =====
+    sendOrderViaHTTP(orderText);
 
     console.log("✅ Данные отправлены в Telegram");
 
