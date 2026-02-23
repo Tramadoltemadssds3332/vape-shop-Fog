@@ -32,19 +32,7 @@
                 <div class="side-menu-logo">Fog Shop</div>
             </div>
             <div class="side-menu-items">
-                <a href="https://t.me/+ydkHgm09g5hhOTMy" target="_blank" class="side-menu-item">
-                    <i class="fab fa-telegram"></i>
-                    <span>Наш канал Telegram</span>
-                    <i class="fas fa-external-link-alt external-icon"></i>
-                </a>
-                <div class="side-menu-item">
-                    <i class="fas fa-info-circle"></i>
-                    <span>О нас</span>
-                </div>
-                <div class="side-menu-item">
-                    <i class="fas fa-question-circle"></i>
-                    <span>Помощь</span>
-                </div>
+                <!-- Сюда будут добавляться пункты меню через JS -->
             </div>
         </div>
 
@@ -55,6 +43,8 @@
                 <button class="category" data-cat="disposable">Одноразовые</button>
                 <button class="category" data-cat="pods">Pod-системы</button>
                 <button class="category" data-cat="liquids">Жидкости</button>
+                <button class="category" data-cat="snus">Снюс</button>
+                <button class="category" data-cat="plates">Пластинки</button>
                 <button class="category" data-cat="accessories">Аксессуары</button>
             </div>
             <div class="slider-indicator" id="sliderIndicator"></div>
@@ -120,6 +110,12 @@
                 <div class="form-group">
                     <label>Ваши данные</label>
                     <input type="text" id="orderName" placeholder="Имя">
+                </div>
+
+                <!-- Блок с рабочим временем -->
+                <div class="work-hours-info" id="workHoursInfo">
+                    <i class="far fa-clock"></i>
+                    <span>Время работы: <strong id="workHoursText">10:00 - 22:00</strong></span>
                 </div>
 
                 <div class="form-group">
