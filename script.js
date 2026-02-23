@@ -4,6 +4,9 @@ tg.ready();
 
 console.log("✅ Fog Shop загружен");
 
+// ========== НАСТРОЙКИ ТЕМЫ ==========
+let darkMode = localStorage.getItem('darkMode') === 'true';
+
 // Данные пользователя
 let user = {
     id: tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000),
@@ -21,14 +24,36 @@ function isAdmin() {
     return admins.includes(user.id);
 }
 
-// Товары
+// ========== ТОВАРЫ ==========
 let products = [
+    // Жидкости
     {id: 1, name: "HS Bank 100ml", price: 890, category: "liquids", image: "🥤", desc: "Фруктовый микс", stock: true, date: "2024-01-01"},
     {id: 2, name: "Sadboy 60ml", price: 690, category: "liquids", image: "🍓", desc: "Клубничный джем", stock: true, date: "2024-01-02"},
+
+    // Pod-системы
     {id: 3, name: "Pod System X", price: 2490, category: "pods", image: "💨", desc: "Компактная pod-система", stock: true, date: "2024-01-03"},
-    {id: 4, name: "Elf Bar 1500", price: 1290, category: "disposable", image: "⚡", desc: "1500 затяжек", stock: true, date: "2024-01-04"},
-    {id: 5, name: "GeekVape Hero", price: 3300, category: "pods", image: "🦸", desc: "Влагозащита IP68", stock: true, date: "2024-01-05"},
-    {id: 6, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: true, date: "2024-01-06"}
+    {id: 4, name: "GeekVape Hero", price: 3300, category: "pods", image: "🦸", desc: "Влагозащита IP68", stock: true, date: "2024-01-05"},
+
+    // Одноразовые
+    {id: 5, name: "Elf Bar 1500", price: 1290, category: "disposable", image: "⚡", desc: "1500 затяжек", stock: true, date: "2024-01-04"},
+    {id: 6, name: "HQD Cuvie", price: 990, category: "disposable", image: "💨", desc: "Компактный", stock: true, date: "2024-01-06"},
+
+    // Аксессуары
+    {id: 7, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: true, date: "2024-01-06"},
+    {id: 8, name: "Испарители", price: 390, category: "accessories", image: "⚙️", desc: "Комплект 5 шт", stock: true, date: "2024-01-07"},
+
+    // ========== НОВЫЕ КАТЕГОРИИ ==========
+    // Снюс
+    {id: 9, name: "Siberia White Dry", price: 550, category: "snus", image: "❄️", desc: "Крепкий снюс", stock: true, date: "2024-01-08"},
+    {id: 10, name: "Odens Cold Dry", price: 520, category: "snus", image: "🧊", desc: "Экстра сильный", stock: true, date: "2024-01-08"},
+    {id: 11, name: "Lyft Freeze", price: 480, category: "snus", image: "💙", desc: "Никотиновые пакеты", stock: true, date: "2024-01-09"},
+    {id: 12, name: "Velo Ice Cool", price: 490, category: "snus", image: "🧊", desc: "Мятный", stock: true, date: "2024-01-09"},
+
+    // Пластинки (никотиновые пастилки)
+    {id: 13, name: "White Fox", price: 530, category: "plates", image: "🦊", desc: "Никотиновые пластинки", stock: true, date: "2024-01-10"},
+    {id: 14, name: "Zyn Spearmint", price: 510, category: "plates", image: "🌿", desc: "Мятные", stock: true, date: "2024-01-10"},
+    {id: 15, name: "Skruf Cassice", price: 540, category: "plates", image: "🍊", desc: "Апельсин", stock: true, date: "2024-01-11"},
+    {id: 16, name: "G.4 Deep Freeze", price: 560, category: "plates", image: "❄️", desc: "Экстра мятные", stock: true, date: "2024-01-11"}
 ];
 
 let cart = [];
@@ -37,8 +62,11 @@ let currentCategory = 'all';
 let currentSort = 'default';
 let appliedPromo = null;
 let currentPage = 'home';
+let searchQuery = '';
+let workHours = '10:00 - 22:00'; // Рабочее время по умолчанию
 
-// Генерация промокода
+// ========== ФУНКЦИИ ==========
+
 function generatePromoCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
@@ -48,7 +76,132 @@ function generatePromoCode() {
     return code;
 }
 
-// Боковое меню
+// ========== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ==========
+function toggleTheme() {
+    darkMode = !darkMode;
+    localStorage.setItem('darkMode', darkMode);
+    applyTheme();
+}
+
+function applyTheme() {
+    const root = document.documentElement;
+    if (darkMode) {
+        // Темная тема
+        root.style.setProperty('--bg-color', '#121212');
+        root.style.setProperty('--surface-color', '#1e1e1e');
+        root.style.setProperty('--text-color', '#ffffff');
+        root.style.setProperty('--text-secondary', '#888888');
+        root.style.setProperty('--border-color', '#333333');
+        root.style.setProperty('--card-bg', '#1e1e1e');
+        root.style.setProperty('--header-bg', '#1e1e1e');
+        root.style.setProperty('--nav-bg', '#1e1e1e');
+        document.body.style.background = '#121212';
+    } else {
+        // Светлая тема
+        root.style.setProperty('--bg-color', '#f5f5f7');
+        root.style.setProperty('--surface-color', '#ffffff');
+        root.style.setProperty('--text-color', '#333333');
+        root.style.setProperty('--text-secondary', '#666666');
+        root.style.setProperty('--border-color', '#f0f0f0');
+        root.style.setProperty('--card-bg', '#ffffff');
+        root.style.setProperty('--header-bg', '#ffffff');
+        root.style.setProperty('--nav-bg', '#ffffff');
+        document.body.style.background = '#f5f5f7';
+    }
+}
+
+// ========== ПОИСК ==========
+function showSearch() {
+    const content = document.getElementById('main-content');
+    if (!content) return;
+
+    content.innerHTML = `
+        <div class="search-page">
+            <div class="search-header">
+                <input type="text" id="searchInput" placeholder="🔍 Поиск товаров..." autofocus>
+                <button onclick="performSearch()" class="search-button">Найти</button>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+        </div>
+    `;
+
+    document.getElementById('searchInput').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+}
+
+function performSearch() {
+    const query = document.getElementById('searchInput')?.value.toLowerCase().trim();
+    if (!query) return;
+
+    searchQuery = query;
+    const results = products.filter(p =>
+        p.name.toLowerCase().includes(query) ||
+        p.desc.toLowerCase().includes(query)
+    );
+
+    const resultsDiv = document.getElementById('searchResults');
+    if (results.length === 0) {
+        resultsDiv.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h3>Ничего не найдено</h3>
+                <p>Попробуйте изменить запрос</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="products-grid">';
+    results.forEach(product => {
+        const inFav = favorites.some(f => f.id === product.id);
+        html += `
+            <div class="product-card">
+                <div class="product-image">${product.image}</div>
+                <div class="product-title">${product.name}</div>
+                <div class="product-price">${product.price} ₽</div>
+                <div style="display: flex; gap: 5px;">
+                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">
+                        🛒 В корзину
+                    </button>
+                    <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#FF6B6B' : 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)'}" onclick="toggleFavorite(${product.id})">
+                        ${inFav ? '❤️' : '🤍'}
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+}
+
+// ========== ЗАГРУЗКА ФОТО ДЛЯ АДМИНОВ ==========
+function uploadProductImage(productId) {
+    if (!isAdmin()) return;
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    product.image = event.target.result;
+                    saveToStorage();
+                    showNotification('✅ Фото загружено', 'success');
+                    if (currentPage === 'home') showHome();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    input.click();
+}
+
+// ========== БОКОВОЕ МЕНЮ ==========
 const menuButton = document.getElementById('menuButton');
 const sideMenu = document.getElementById('sideMenu');
 const closeMenu = document.getElementById('closeMenu');
@@ -68,13 +221,42 @@ menuButton?.addEventListener('click', openMenu);
 closeMenu?.addEventListener('click', closeMenuFunc);
 overlay?.addEventListener('click', closeMenuFunc);
 
-// Подвижная линия категорий
+// Обновляем боковое меню с переключателем темы
+function updateSideMenu() {
+    const menuItems = document.querySelector('.side-menu-items');
+    if (menuItems) {
+        const themeIcon = darkMode ? '☀️' : '🌙';
+        const themeText = darkMode ? 'Светлая тема' : 'Темная тема';
+
+        menuItems.innerHTML = `
+            <a href="https://t.me/+ydkHgm09g5hhOTMy" target="_blank" class="side-menu-item">
+                <i class="fab fa-telegram"></i>
+                <span>Наш канал Telegram</span>
+                <i class="fas fa-external-link-alt external-icon"></i>
+            </a>
+            <div class="side-menu-item" onclick="toggleTheme()">
+                <i class="fas ${darkMode ? 'fa-sun' : 'fa-moon'}"></i>
+                <span>${themeText}</span>
+            </div>
+            <div class="side-menu-item" onclick="showNotification('ℹ️ О нас', 'info')">
+                <i class="fas fa-info-circle"></i>
+                <span>О нас</span>
+            </div>
+            <div class="side-menu-item" onclick="showNotification('❓ Помощь', 'info')">
+                <i class="fas fa-question-circle"></i>
+                <span>Помощь</span>
+            </div>
+        `;
+    }
+}
+
+// ========== ПОДВИЖНАЯ ЛИНИЯ КАТЕГОРИЙ ==========
 const categoriesSlider = document.getElementById('categoriesSlider');
 const indicator = document.getElementById('sliderIndicator');
 
 function updateIndicator() {
     const activeCategory = document.querySelector('.category.active');
-    if (activeCategory && indicator) {
+    if (activeCategory && indicator && categoriesSlider) {
         const container = categoriesSlider;
         const index = Array.from(container.children).indexOf(activeCategory);
 
@@ -84,7 +266,7 @@ function updateIndicator() {
         for (let i = 0; i <= index; i++) {
             const category = container.children[i];
             if (i < index) {
-                left += category.offsetWidth + 15; // 15 - это gap
+                left += category.offsetWidth + 15;
             } else {
                 width = category.offsetWidth;
             }
@@ -95,11 +277,13 @@ function updateIndicator() {
     }
 }
 
-// Инициализация
+// ========== ИНИЦИАЛИЗАЦИЯ ==========
 (function init() {
+    applyTheme();
     loadFromStorage();
     showHome();
     setTimeout(updateIndicator, 100);
+    updateSideMenu();
 
     if (isAdmin()) {
         const adminBtn = document.getElementById('adminBtn');
@@ -107,7 +291,6 @@ function updateIndicator() {
     }
 })();
 
-// Загрузка из localStorage
 function loadFromStorage() {
     try {
         const savedCart = localStorage.getItem(`cart_${user.id}`);
@@ -118,6 +301,9 @@ function loadFromStorage() {
 
         const savedOrders = localStorage.getItem(`orders_${user.id}`);
         if (savedOrders) user.orders = JSON.parse(savedOrders);
+
+        const savedProducts = localStorage.getItem('products');
+        if (savedProducts) products = JSON.parse(savedProducts);
     } catch (e) {
         console.log('Ошибка загрузки');
     }
@@ -130,6 +316,7 @@ function saveToStorage() {
         localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
         localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
         localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
+        localStorage.setItem('products', JSON.stringify(products));
     } catch (e) {
         console.log('Ошибка сохранения');
     }
@@ -187,7 +374,9 @@ function showHome() {
 
         html += `
             <div class="product-card">
-                <div class="product-image">${product.image}</div>
+                <div class="product-image" onclick="${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
+                    ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
+                </div>
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <div style="display: flex; gap: 5px;">
@@ -200,7 +389,7 @@ function showHome() {
                 </div>
                 ${isAdmin() ? `
                 <div class="admin-controls">
-                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️</button>
+                    <button class="admin-btn edit-btn" onclick="editProduct(${product.id})">✏️ Ред.</button>
                     <button class="admin-btn delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
                 </div>
                 ` : ''}
@@ -236,7 +425,7 @@ function showFavorites() {
     favorites.forEach(product => {
         html += `
             <div class="product-card">
-                <div class="product-image">${product.image}</div>
+                <div class="product-image">${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}</div>
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <button class="add-to-cart" onclick="addToCart(${product.id})">
@@ -352,7 +541,7 @@ function showProfile() {
 
     let ordersHtml = '';
     if (user.orders.length === 0) {
-        ordersHtml = '<p style="text-align: center; color: #999; padding: 20px;">У вас пока нет заказов</p>';
+        ordersHtml = '<p style="text-align: center; color: #888; padding: 20px;">У вас пока нет заказов</p>';
     } else {
         ordersHtml = user.orders.map(order => `
             <div class="order-item">
@@ -430,29 +619,7 @@ function addToCart(productId) {
     updateCartBadge();
 
     tg.HapticFeedback.impactOccurred('light');
-
-    // Анимированное уведомление (без алерта)
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-        color: white;
-        padding: 12px 20px;
-        border-radius: 25px;
-        font-size: 14px;
-        z-index: 2000;
-        animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    `;
-    notification.textContent = `${product.name} добавлен в корзину`;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+    showNotification(`${product.name} добавлен в корзину`, 'cart');
 }
 
 function updateCartItem(productId, delta) {
@@ -501,7 +668,7 @@ function toggleFavorite(productId) {
     else if (currentPage === 'home') showHome();
 }
 
-function showNotification(text, icon) {
+function showNotification(text, type) {
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
@@ -510,19 +677,22 @@ function showNotification(text, icon) {
         transform: translateX(-50%);
         background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
         color: white;
-        padding: 12px 20px;
-        border-radius: 25px;
+        padding: 12px 24px;
+        border-radius: 30px;
         font-size: 14px;
         z-index: 2000;
-        animation: slideDown 0.3s, fadeOut 0.3s 1.7s;
+        animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        text-align: center;
+        min-width: 200px;
+        font-weight: 500;
     `;
-    notification.innerHTML = `${icon === 'heart' ? '❤️' : '💔'} ${text}`;
+    notification.textContent = text;
     document.body.appendChild(notification);
 
     setTimeout(() => {
         notification.remove();
-    }, 2000);
+    }, 3000);
 }
 
 function applyPromo() {
@@ -538,7 +708,7 @@ function applyPromo() {
     }
 
     if (code === user.promoCode) {
-        alert('Нельзя использовать свой промокод');
+        showNotification('❌ Нельзя использовать свой промокод', 'error');
         return;
     }
 
@@ -575,12 +745,12 @@ function completeOrder() {
     const comment = commentInput ? commentInput.value.trim() : '';
 
     if (!name) {
-        alert('Введите имя');
+        showNotification('❌ Введите имя', 'error');
         return;
     }
 
     if (cart.length === 0) {
-        alert('Корзина пуста');
+        showNotification('❌ Корзина пуста', 'error');
         closeModal();
         return;
     }
@@ -632,35 +802,8 @@ function completeOrder() {
 
     closeModal();
 
-    // Показываем уведомление
     showNotification('✅ Заказ отправлен! Менеджер свяжется с вами', 'success');
     showHome();
-}
-
-function showNotification(text, type) {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-        color: white;
-        padding: 15px 25px;
-        border-radius: 30px;
-        font-size: 14px;
-        z-index: 2000;
-        animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        text-align: center;
-        min-width: 200px;
-    `;
-    notification.textContent = text;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
 }
 
 function participateRaffle() {
@@ -671,7 +814,7 @@ function participateRaffle() {
 
 function showAdminPanel() {
     if (user.id !== MAIN_ADMIN_ID) {
-        alert('Только главный админ');
+        showNotification('⛔ Только главный админ', 'error');
         return;
     }
 
@@ -680,19 +823,25 @@ function showAdminPanel() {
         adminList += `• ${id}${id === MAIN_ADMIN_ID ? ' (главный)' : ''}\n`;
     });
 
-    const action = prompt(adminList + '\n1. Добавить админа\n2. Удалить админа');
+    const action = prompt(adminList + '\n1. Добавить админа\n2. Удалить админа\n3. Изменить рабочее время');
 
     if (action === '1') {
         const newAdmin = prompt('Введите ID нового админа:');
         if (newAdmin && !admins.includes(parseInt(newAdmin))) {
             admins.push(parseInt(newAdmin));
-            alert('✅ Админ добавлен!');
+            showNotification('✅ Админ добавлен!', 'success');
         }
     } else if (action === '2') {
         const removeAdmin = prompt('Введите ID админа для удаления:');
         if (removeAdmin && parseInt(removeAdmin) !== MAIN_ADMIN_ID) {
             admins = admins.filter(id => id !== parseInt(removeAdmin));
-            alert('✅ Админ удален!');
+            showNotification('✅ Админ удален!', 'success');
+        }
+    } else if (action === '3') {
+        const newHours = prompt('Введите рабочее время (например: 10:00 - 22:00):', workHours);
+        if (newHours) {
+            workHours = newHours;
+            showNotification('✅ Рабочее время обновлено!', 'success');
         }
     }
 }
@@ -712,8 +861,12 @@ function editProduct(id) {
     const newDesc = prompt('Описание:', product.desc);
     if (newDesc) product.desc = newDesc;
 
+    const newCategory = prompt('Категория (liquids/pods/disposable/accessories/snus/plates):', product.category);
+    if (newCategory) product.category = newCategory;
+
     saveToStorage();
     showHome();
+    showNotification('✅ Товар обновлен', 'success');
 }
 
 function deleteProduct(id) {
@@ -723,6 +876,7 @@ function deleteProduct(id) {
         products = products.filter(p => p.id !== id);
         saveToStorage();
         showHome();
+        showNotification('✅ Товар удален', 'success');
     }
 }
 
@@ -735,7 +889,7 @@ function addNewProduct() {
     const price = parseInt(prompt('Цена:'));
     if (!price) return;
 
-    const category = prompt('Категория (liquids/pods/disposable/accessories):') || 'liquids';
+    const category = prompt('Категория (liquids/pods/disposable/accessories/snus/plates):') || 'liquids';
     const desc = prompt('Описание:') || '';
     const image = prompt('Эмодзи для фото:') || '📦';
 
@@ -754,6 +908,7 @@ function addNewProduct() {
 
     saveToStorage();
     showHome();
+    showNotification('✅ Товар добавлен', 'success');
 }
 
 // ========== НАВИГАЦИЯ ==========
@@ -764,6 +919,7 @@ function navigateTo(page) {
     else if (page === 'cart') showCart();
     else if (page === 'profile') showProfile();
     else if (page === 'raffle') showRaffle();
+    else if (page === 'search') showSearch();
 
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.classList.remove('active');
@@ -829,7 +985,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 const searchIcon = document.querySelector('.search-icon');
 if (searchIcon) {
     searchIcon.addEventListener('click', () => {
-        showNotification('🔍 Поиск появится скоро', 'search');
+        navigateTo('search');
     });
 }
 
@@ -849,9 +1005,53 @@ if (adminBtn) {
     });
 }
 
-// Добавляем анимации
+// Добавляем CSS переменные и анимации
 const style = document.createElement('style');
 style.textContent = `
+    :root {
+        --bg-color: #f5f5f7;
+        --surface-color: #ffffff;
+        --text-color: #333333;
+        --text-secondary: #666666;
+        --border-color: #f0f0f0;
+        --card-bg: #ffffff;
+        --header-bg: #ffffff;
+        --nav-bg: #ffffff;
+    }
+    
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s, color 0.3s;
+    }
+    
+    .app {
+        background: var(--surface-color);
+    }
+    
+    .header, .categories-wrapper, .sort-section, .bottom-nav {
+        background: var(--header-bg);
+        border-color: var(--border-color);
+    }
+    
+    .product-card {
+        background: var(--card-bg);
+        border-color: var(--border-color);
+    }
+    
+    .cart-item, .cart-summary, .history-section {
+        background: var(--surface-color);
+        border-color: var(--border-color);
+    }
+    
+    .product-title, .cart-item-info h4, .profile-info h3 {
+        color: var(--text-color);
+    }
+    
+    .product-price {
+        color: #FF6B6B;
+    }
+    
     @keyframes slideDown {
         from { opacity: 0; transform: translate(-50%, -20px); }
         to { opacity: 1; transform: translate(-50%, 0); }
@@ -860,6 +1060,40 @@ style.textContent = `
     @keyframes fadeOut {
         from { opacity: 1; }
         to { opacity: 0; }
+    }
+    
+    .search-page {
+        padding: 15px;
+    }
+    
+    .search-header {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .search-header input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 16px;
+        background: var(--surface-color);
+        color: var(--text-color);
+    }
+    
+    .search-button {
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    .search-results {
+        margin-top: 20px;
     }
 `;
 document.head.appendChild(style);
