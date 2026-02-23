@@ -2,6 +2,7 @@ let tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 console.log("✅ Telegram WebApp инициализирован");
+console.log("🚀 Скрипт загружен!");
 
 // Данные пользователя
 let user = {
