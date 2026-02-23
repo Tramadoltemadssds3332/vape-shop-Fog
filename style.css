@@ -653,6 +653,11 @@ body {
     transition: background-color 0.3s, border-color 0.3s, color 0.3s;
 }
 
+.promo-section input:focus {
+    outline: none;
+    border-color: #FF6B6B;
+}
+
 .promo-section button {
     padding: 12px 20px;
     background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
@@ -875,6 +880,8 @@ body {
     border-radius: 25px;
     width: 90%;
     max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
     animation: slideUp 0.3s;
     transition: background-color 0.3s;
 }
@@ -955,44 +962,90 @@ body {
     font-weight: 600;
 }
 
-/* Стили для выбора времени */
-.time-select-wrapper {
-    margin: 15px 0;
-    padding: 15px;
+/* ========== СТИЛИ ДЛЯ ДОСТАВКИ ========== */
+.delivery-fields {
+    margin: 20px 0;
+    animation: slideDown 0.3s;
+}
+
+.delivery-section {
     background: #f8f9fa;
-    border-radius: 12px;
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 15px;
     border: 1px solid #f0f0f0;
     transition: all 0.3s;
 }
 
-.time-select-wrapper label {
-    display: block;
-    margin-bottom: 8px;
-    color: #666;
-    font-size: 14px;
-    transition: color 0.3s;
+.delivery-section h4 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.time-select {
+.place-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.place-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 10px;
+    transition: background 0.3s;
+}
+
+.place-option:hover {
+    background: #f0f0f0;
+}
+
+.place-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #FF6B6B;
+}
+
+.place-option span {
+    color: #333;
+    font-size: 15px;
+}
+
+.delivery-select {
     width: 100%;
     padding: 12px;
     background: #ffffff;
     border: 1px solid #f0f0f0;
     border-radius: 10px;
     color: #333;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
     transition: all 0.3s;
 }
 
-.time-select:hover {
+.delivery-select:hover {
     border-color: #FF6B6B;
 }
 
-.time-select:focus {
+.delivery-select:focus {
     outline: none;
     border-color: #FF6B6B;
     box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.delivery-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #FF6B6B;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .modal-buttons {
@@ -1279,22 +1332,30 @@ body.dark-mode .work-hours-info strong {
     color: #4ECDC4;
 }
 
-body.dark-mode .time-select-wrapper {
+body.dark-mode .delivery-section {
     background: #2d2d2d;
     border-color: #404040;
 }
 
-body.dark-mode .time-select-wrapper label {
-    color: #aaa;
+body.dark-mode .delivery-section h4 {
+    color: #ffffff;
 }
 
-body.dark-mode .time-select {
+body.dark-mode .place-option span {
+    color: #ffffff;
+}
+
+body.dark-mode .place-option:hover {
+    background: #3d3d3d;
+}
+
+body.dark-mode .delivery-select {
     background: #1e1e1e;
     border-color: #404040;
     color: #ffffff;
 }
 
-body.dark-mode .time-select option {
+body.dark-mode .delivery-select option {
     background: #1e1e1e;
     color: #ffffff;
 }

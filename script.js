@@ -140,7 +140,7 @@ function performSearch() {
         const inFav = favorites.some(f => f.id === product.id);
         html += `
             <div class="product-card">
-                <div class="product-image">${product.image}</div>
+                <div class="product-image">${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}</div>
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <div style="display: flex; gap: 5px;">
@@ -158,9 +158,12 @@ function performSearch() {
     resultsDiv.innerHTML = html;
 }
 
-// ========== ЗАГРУЗКА ФОТО ДЛЯ АДМИНОВ ==========
+// ========== ЗАГРУЗКА ФОТО ДЛЯ АДМИНОВ (фото видят ВСЕ пользователи) ==========
 function uploadProductImage(productId) {
-    if (!isAdmin()) return;
+    if (!isAdmin()) {
+        showNotification('⛔ Только для админов', 'error');
+        return;
+    }
 
     const input = document.createElement('input');
     input.type = 'file';
@@ -172,9 +175,15 @@ function uploadProductImage(productId) {
             reader.onload = (event) => {
                 const product = products.find(p => p.id === productId);
                 if (product) {
+                    // Сохраняем фото в товар (теперь увидят ВСЕ пользователи)
                     product.image = event.target.result;
+
+                    // Сохраняем в localStorage чтобы фото не пропало
                     saveToStorage();
-                    showNotification('✅ Фото загружено', 'success');
+
+                    showNotification('✅ Фото загружено! Теперь его видят все', 'success');
+
+                    // Обновляем отображение
                     if (currentPage === 'home') showHome();
                 }
             };
@@ -182,6 +191,33 @@ function uploadProductImage(productId) {
         }
     };
     input.click();
+}
+
+// ========== ГЕНЕРАЦИЯ ДАТ (начиная со следующего дня) ==========
+function generateDateOptions() {
+    const options = [];
+    const today = new Date();
+
+    // Генерируем даты на 14 дней вперед, начиная с ЗАВТРАШНЕГО дня
+    for (let i = 1; i <= 14; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+
+        // Название дня недели
+        const weekdays = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        const weekday = weekdays[date.getDay()];
+
+        const dateStr = `${day}.${month}.${year}`;
+        const displayStr = `${weekday}, ${dateStr}`;
+
+        options.push(`<option value="${dateStr}">${displayStr}</option>`);
+    }
+
+    return options.join('');
 }
 
 // ========== ГЕНЕРАЦИЯ ВАРИАНТОВ ВРЕМЕНИ ==========
@@ -312,8 +348,11 @@ function loadFromStorage() {
         const savedOrders = localStorage.getItem(`orders_${user.id}`);
         if (savedOrders) user.orders = JSON.parse(savedOrders);
 
+        // Загружаем товары (включая фото от админов!)
         const savedProducts = localStorage.getItem('products');
-        if (savedProducts) products = JSON.parse(savedProducts);
+        if (savedProducts) {
+            products = JSON.parse(savedProducts);
+        }
     } catch (e) {
         console.log('Ошибка загрузки');
     }
@@ -326,6 +365,8 @@ function saveToStorage() {
         localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
         localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
         localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
+
+        // Сохраняем товары с фото, чтобы все пользователи их видели
         localStorage.setItem('products', JSON.stringify(products));
     } catch (e) {
         console.log('Ошибка сохранения');
@@ -724,33 +765,61 @@ function checkout() {
             workHoursSpan.textContent = workHours;
         }
 
-        // Создаем или обновляем селект времени
-        let timeSelect = document.getElementById('deliveryTime');
-        if (!timeSelect) {
-            const workHoursDiv = document.querySelector('.work-hours-info');
-            if (workHoursDiv) {
-                const selectHtml = `
-                    <div class="time-select-wrapper">
-                        <label for="deliveryTime">Выберите время доставки:</label>
-                        <select id="deliveryTime" class="time-select">
-                            <option value="">-- Выберите время --</option>
-                            ${generateTimeOptions(workHours)}
-                        </select>
-                    </div>
-                `;
-                workHoursDiv.insertAdjacentHTML('afterend', selectHtml);
-            }
-        } else {
-            // Обновляем опции
-            timeSelect.innerHTML = `
-                <option value="">-- Выберите время --</option>
-                ${generateTimeOptions(workHours)}
-            `;
+        // Добавляем поля доставки если их нет
+        if (!document.getElementById('deliveryFields')) {
+            addDeliveryFields();
         }
 
         modal.classList.add('show');
         nameInput.value = user.firstName;
     }
+}
+
+// ========== ДОБАВЛЕНИЕ ПОЛЕЙ ДОСТАВКИ ==========
+function addDeliveryFields() {
+    const workHoursDiv = document.querySelector('.work-hours-info');
+    if (!workHoursDiv) return;
+
+    // Удаляем старые поля если есть
+    const oldFields = document.getElementById('deliveryFields');
+    if (oldFields) oldFields.remove();
+
+    const deliveryHtml = `
+        <div id="deliveryFields" class="delivery-fields">
+            <div class="delivery-section">
+                <h4>📍 Место встречи</h4>
+                <div class="place-selector">
+                    <label class="place-option">
+                        <input type="radio" name="deliveryPlace" value="Северный вокзал" checked>
+                        <span>🚂 Северный вокзал</span>
+                    </label>
+                    <label class="place-option">
+                        <input type="radio" name="deliveryPlace" value="ТРЦ Европа">
+                        <span>🛍️ ТРЦ Европа</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="delivery-section">
+                <h4>📅 Дата доставки</h4>
+                <select id="deliveryDate" class="delivery-select">
+                    <option value="">-- Выберите дату --</option>
+                    ${generateDateOptions()}
+                </select>
+                <p class="delivery-note">⚠️ Доставка осуществляется на следующий день после заказа</p>
+            </div>
+            
+            <div class="delivery-section">
+                <h4>⏰ Время</h4>
+                <select id="deliveryTime" class="delivery-select">
+                    <option value="">-- Выберите время --</option>
+                    ${generateTimeOptions(workHours)}
+                </select>
+            </div>
+        </div>
+    `;
+
+    workHoursDiv.insertAdjacentHTML('afterend', deliveryHtml);
 }
 
 function closeModal() {
@@ -765,15 +834,37 @@ function completeOrder() {
     const nameInput = document.getElementById('orderName');
     const commentInput = document.getElementById('orderComment');
     const timeSelect = document.getElementById('deliveryTime');
+    const dateSelect = document.getElementById('deliveryDate');
+    const placeRadios = document.getElementsByName('deliveryPlace');
 
     if (!nameInput) return;
 
     const name = nameInput.value.trim();
     const comment = commentInput ? commentInput.value.trim() : '';
     const deliveryTime = timeSelect ? timeSelect.value : 'Не выбрано';
+    const deliveryDate = dateSelect ? dateSelect.value : 'Не выбрана';
+
+    // Получаем выбранное место
+    let deliveryPlace = 'Не выбрано';
+    for (const radio of placeRadios) {
+        if (radio.checked) {
+            deliveryPlace = radio.value;
+            break;
+        }
+    }
 
     if (!name) {
         showNotification('❌ Введите имя', 'error');
+        return;
+    }
+
+    if (!deliveryDate || deliveryDate === 'Не выбрана') {
+        showNotification('❌ Выберите дату доставки', 'error');
+        return;
+    }
+
+    if (!deliveryTime || deliveryTime === 'Не выбрано') {
+        showNotification('❌ Выберите время доставки', 'error');
         return;
     }
 
@@ -808,6 +899,8 @@ function completeOrder() {
         status: 'Новый',
         name: name,
         comment: comment,
+        deliveryPlace: deliveryPlace,
+        deliveryDate: deliveryDate,
         deliveryTime: deliveryTime,
         promo: appliedPromo
     };
@@ -815,7 +908,7 @@ function completeOrder() {
     user.orders.push(order);
     saveToStorage();
 
-    const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 Клиент: @${user.username} (${name})\n\n📦 Заказ:\n${itemsList}\n💰 Сумма: ${total} ₽\n⏰ Время доставки: ${deliveryTime}\n${appliedPromo ? `🎫 Промокод: ${appliedPromo} (скидка 5%)\n` : ''}\n📝 Пожелание:\n${comment || '—'}\n\n🕐 Время заказа: ${order.date}`;
+    const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 Клиент: @${user.username} (${name})\n\n📦 Заказ:\n${itemsList}\n💰 Сумма: ${total} ₽\n📍 Место: ${deliveryPlace}\n📅 Дата: ${deliveryDate}\n⏰ Время: ${deliveryTime}\n${appliedPromo ? `🎫 Промокод: ${appliedPromo} (скидка 5%)\n` : ''}\n📝 Пожелание:\n${comment || '—'}\n\n🕐 Время заказа: ${order.date}`;
 
     // ===== ОТПРАВКА ЧЕРЕЗ TELEGRAM WEBAPP =====
     tg.sendData(JSON.stringify({
