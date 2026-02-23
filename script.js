@@ -11,11 +11,10 @@ let user = {
     orders: []
 };
 
-// Админы (только те, кого добавил главный админ)
-const MAIN_ADMIN_ID = 1439146971; // Твой ID
-let admins = [MAIN_ADMIN_ID]; // Загружать из файла потом
+// Админы
+const MAIN_ADMIN_ID = 1439146971;
+let admins = [MAIN_ADMIN_ID];
 
-// Проверка на админа
 function isAdmin() {
     return admins.includes(user.id);
 }
@@ -30,16 +29,13 @@ let products = [
     {id: 6, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: true, date: "2024-01-06"}
 ];
 
-// Корзина, избранное, сортировка
 let cart = [];
 let favorites = [];
 let currentCategory = 'all';
 let currentSort = 'default';
 let appliedPromo = null;
-let categoriesOpen = false;
-let sortOpen = false;
+let currentPage = 'home';
 
-// Генерация промокода
 function generatePromoCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
@@ -54,13 +50,11 @@ function generatePromoCode() {
     loadFromStorage();
     showHome();
 
-    // Показываем админку если админ
     if (isAdmin()) {
         document.getElementById('adminBtn').style.display = 'flex';
     }
 })();
 
-// Загрузка из localStorage
 function loadFromStorage() {
     const savedCart = localStorage.getItem(`cart_${user.id}`);
     if (savedCart) cart = JSON.parse(savedCart);
@@ -74,19 +68,36 @@ function loadFromStorage() {
     updateCartBadge();
 }
 
-// Сохранение
 function saveToStorage() {
     localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
     localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
     localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
 }
 
-// Обновление бейджа корзины
 function updateCartBadge() {
     document.getElementById('cartBadge').textContent = cart.length;
 }
 
-// Сортировка товаров
+// Показывать/скрывать фильтры
+function toggleFilters(show) {
+    const categoriesSection = document.querySelector('.categories-section');
+    const sortSection = document.querySelector('.sort-section');
+    const banner = document.querySelector('.banner');
+
+    if (categoriesSection && sortSection && banner) {
+        if (show) {
+            categoriesSection.style.display = 'block';
+            sortSection.style.display = 'block';
+            banner.style.display = 'block';
+        } else {
+            categoriesSection.style.display = 'none';
+            sortSection.style.display = 'none';
+            banner.style.display = 'none';
+        }
+    }
+}
+
+// Сортировка
 function sortProducts(products) {
     switch(currentSort) {
         case 'price_asc':
@@ -104,7 +115,11 @@ function sortProducts(products) {
 
 // Главная
 function showHome() {
+    currentPage = 'home';
+    toggleFilters(true);
+
     const content = document.getElementById('main-content');
+    if (!content) return;
 
     let filtered = products;
     if (currentCategory !== 'all') {
@@ -144,9 +159,50 @@ function showHome() {
     content.innerHTML = html;
 }
 
+// Избранное
+function showFavorites() {
+    currentPage = 'favorites';
+    toggleFilters(false);
+
+    const content = document.getElementById('main-content');
+    if (!content) return;
+
+    if (favorites.length === 0) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-heart-broken"></i>
+                <h3>Избранное пусто</h3>
+                <p>Добавьте товары в избранное</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="products-grid">';
+    favorites.forEach(product => {
+        html += `
+            <div class="product-card">
+                <div class="product-image">${product.image}</div>
+                <div class="product-title">${product.name}</div>
+                <div class="product-price">${product.price} ₽</div>
+                <button class="add-to-cart" onclick="addToCart(${product.id})">
+                    🛒 В корзину
+                </button>
+            </div>
+        `;
+    });
+    html += '</div>';
+
+    content.innerHTML = html;
+}
+
 // Корзина
 function showCart() {
+    currentPage = 'cart';
+    toggleFilters(false);
+
     const content = document.getElementById('main-content');
+    if (!content) return;
 
     if (cart.length === 0) {
         content.innerHTML = `
@@ -235,7 +291,11 @@ function showCart() {
 
 // Профиль
 function showProfile() {
+    currentPage = 'profile';
+    toggleFilters(false);
+
     const content = document.getElementById('main-content');
+    if (!content) return;
 
     content.innerHTML = `
         <div class="profile-page">
@@ -281,9 +341,201 @@ function showProfile() {
     `;
 }
 
+// Розыгрыш
+function showRaffle() {
+    currentPage = 'raffle';
+    toggleFilters(false);
+
+    const content = document.getElementById('main-content');
+    if (!content) return;
+
+    content.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-gift"></i>
+            <h3>РОЗЫГРЫШ</h3>
+            <p>Fog Shop</p>
+            <p style="margin-top: 20px;">Участвуй и выигрывай!</p>
+            <button class="checkout-btn" style="margin-top: 20px;" onclick="participateRaffle()">
+                Участвовать
+            </button>
+        </div>
+    `;
+}
+
+// ========== ДЕЙСТВИЯ С ТОВАРАМИ ==========
+
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    cart.push({...product});
+    saveToStorage();
+    updateCartBadge();
+
+    tg.HapticFeedback.impactOccurred('light');
+    tg.showAlert(`${product.name} добавлен в корзину`);
+}
+
+function updateCartItem(productId, delta) {
+    const index = cart.findIndex(item => item.id === productId);
+    if (index === -1) return;
+
+    if (delta > 0) {
+        cart.push({...products.find(p => p.id === productId)});
+    } else {
+        cart.splice(index, 1);
+    }
+
+    saveToStorage();
+    updateCartBadge();
+    showCart();
+}
+
+function clearCart() {
+    if (confirm('Очистить корзину?')) {
+        cart = [];
+        appliedPromo = null;
+        saveToStorage();
+        updateCartBadge();
+        showCart();
+    }
+}
+
+function toggleFavorite(productId) {
+    const product = products.find(p => p.id === productId);
+    const index = favorites.findIndex(f => f.id === productId);
+
+    if (index === -1) {
+        favorites.push({...product});
+        tg.showAlert('➕ В избранное');
+    } else {
+        favorites.splice(index, 1);
+        tg.showAlert('➖ Из избранного');
+    }
+
+    saveToStorage();
+    tg.HapticFeedback.impactOccurred('light');
+    if (currentPage === 'favorites') showFavorites();
+}
+
+function applyPromo() {
+    const input = document.getElementById('promoInput')?.value;
+
+    if (!input) {
+        appliedPromo = null;
+        showCart();
+        return;
+    }
+
+    if (input === user.promoCode) {
+        tg.showAlert('Нельзя использовать свой промокод');
+        return;
+    }
+
+    appliedPromo = input;
+    tg.HapticFeedback.impactOccurred('light');
+    showCart();
+}
+
+// ========== ОФОРМЛЕНИЕ ЗАКАЗА ==========
+
+function checkout() {
+    document.getElementById('orderModal').classList.add('show');
+    document.getElementById('orderName').value = user.firstName;
+}
+
+function closeModal() {
+    document.getElementById('orderModal').classList.remove('show');
+}
+
+// ========== ГЛАВНАЯ ФУНКЦИЯ ЗАВЕРШЕНИЯ ЗАКАЗА ==========
+function completeOrder() {
+    const name = document.getElementById('orderName').value;
+    const comment = document.getElementById('orderComment').value;
+
+    if (!name) {
+        tg.showAlert('Введите имя');
+        return;
+    }
+
+    const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+    const discount = appliedPromo ? subtotal * 0.05 : 0;
+    const total = subtotal - discount;
+
+    // Группируем товары для красивого вывода
+    const grouped = {};
+    cart.forEach(item => {
+        if (!grouped[item.id]) {
+            grouped[item.id] = {...item, count: 0};
+        }
+        grouped[item.id].count++;
+    });
+
+    let itemsList = '';
+    Object.values(grouped).forEach(item => {
+        itemsList += `• ${item.name} x${item.count} — ${item.price * item.count}₽\n`;
+    });
+
+    const order = {
+        id: Date.now(),
+        date: new Date().toLocaleString('ru-RU'),
+        items: cart.length,
+        total: total,
+        status: 'Новый',
+        name: name,
+        comment: comment,
+        promo: appliedPromo
+    };
+
+    user.orders.push(order);
+    saveToStorage();
+
+    // ============================================
+    // КРАСИВОЕ УВЕДОМЛЕНИЕ ДЛЯ МЕНЕДЖЕРА
+    // ============================================
+    const orderText = `🆕 <b>НОВЫЙ ЗАКАЗ!</b>
+
+👤 <b>Клиент:</b> @${user.username} (${name})
+
+📦 <b>Заказ:</b>
+${itemsList}
+💰 <b>Сумма:</b> ${total} ₽
+${appliedPromo ? `🎫 <b>Промокод:</b> ${appliedPromo} (скидка 5%)` : ''}
+
+📝 <b>Пожелание:</b>
+${comment || '—'}
+
+🕐 <b>Время:</b> ${order.date}`;
+
+    // Отправляем данные в бота
+    tg.sendData(JSON.stringify({
+        action: 'new_order',
+        text: orderText,
+        order: order,
+        cart: cart,
+        user: {
+            id: user.id,
+            username: user.username,
+            name: user.firstName
+        }
+    }));
+    // ============================================
+
+    // Очищаем корзину
+    cart = [];
+    appliedPromo = null;
+    saveToStorage();
+    updateCartBadge();
+
+    closeModal();
+    tg.showAlert('✅ Заказ отправлен! Менеджер свяжется с вами');
+    showHome();
+}
+
+function participateRaffle() {
+    tg.showAlert('Вы участвуете в розыгрыше! Следите за новостями');
+}
+
 // ========== АДМИНКА ==========
 
-// Панель управления админами
 function showAdminPanel() {
     if (user.id !== MAIN_ADMIN_ID) {
         tg.showAlert('Только главный админ');
@@ -312,7 +564,6 @@ function showAdminPanel() {
     }
 }
 
-// Редактирование товара
 function editProduct(id) {
     if (!isAdmin()) return;
 
@@ -334,7 +585,6 @@ function editProduct(id) {
     showHome();
 }
 
-// Удаление товара
 function deleteProduct(id) {
     if (!isAdmin()) return;
 
@@ -345,7 +595,6 @@ function deleteProduct(id) {
     }
 }
 
-// Добавление нового товара
 function addNewProduct() {
     if (!isAdmin()) return;
 
@@ -359,7 +608,7 @@ function addNewProduct() {
     const desc = prompt('Описание:');
     const image = prompt('Эмодзи для фото:') || '📦';
 
-    const newId = Math.max(...products.map(p => p.id)) + 1;
+    const newId = Math.max(...products.map(p => p.id), 0) + 1;
 
     products.push({
         id: newId,
@@ -376,228 +625,44 @@ function addNewProduct() {
     showHome();
 }
 
-// ========== ДЕЙСТВИЯ ==========
+// ========== НАВИГАЦИЯ ==========
 
-// Добавление в корзину
-function addToCart(productId) {
-    const product = products.find(p => p.id === productId);
-    cart.push({...product});
-    saveToStorage();
-    updateCartBadge();
-
-    tg.HapticFeedback.impactOccurred('light');
-    tg.showAlert(`${product.name} добавлен в корзину`);
-}
-
-// Обновление количества
-function updateCartItem(productId, delta) {
-    const index = cart.findIndex(item => item.id === productId);
-    if (index === -1) return;
-
-    if (delta > 0) {
-        cart.push({...products.find(p => p.id === productId)});
-    } else {
-        cart.splice(index, 1);
-    }
-
-    saveToStorage();
-    updateCartBadge();
-    showCart();
-}
-
-// Очистка корзины
-function clearCart() {
-    if (confirm('Очистить корзину?')) {
-        cart = [];
-        appliedPromo = null;
-        saveToStorage();
-        updateCartBadge();
-        showCart();
-    }
-}
-
-// Избранное
-function toggleFavorite(productId) {
-    const product = products.find(p => p.id === productId);
-    const index = favorites.findIndex(f => f.id === productId);
-
-    if (index === -1) {
-        favorites.push({...product});
-        tg.showAlert('➕ В избранное');
-    } else {
-        favorites.splice(index, 1);
-        tg.showAlert('➖ Из избранного');
-    }
-
-    saveToStorage();
-    tg.HapticFeedback.impactOccurred('light');
-    showFavorites();
-}
-
-// Избранное страница
-function showFavorites() {
-    const content = document.getElementById('main-content');
-
-    if (favorites.length === 0) {
-        content.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-heart-broken"></i>
-                <h3>Избранное пусто</h3>
-                <p>Добавьте товары в избранное</p>
-            </div>
-        `;
-        return;
-    }
-
-    let html = '<div class="products-grid">';
-    favorites.forEach(product => {
-        html += `
-            <div class="product-card">
-                <div class="product-image">${product.image}</div>
-                <div class="product-title">${product.name}</div>
-                <div class="product-price">${product.price} ₽</div>
-                <button class="add-to-cart" onclick="addToCart(${product.id})">
-                    🛒 В корзину
-                </button>
-            </div>
-        `;
-    });
-    html += '</div>';
-
-    content.innerHTML = html;
-}
-
-// Применение промокода
-function applyPromo() {
-    const input = document.getElementById('promoInput').value;
-
-    if (!input) {
-        appliedPromo = null;
-        showCart();
-        return;
-    }
-
-    if (input === user.promoCode) {
-        tg.showAlert('Нельзя использовать свой промокод');
-        return;
-    }
-
-    appliedPromo = input;
-    tg.HapticFeedback.impactOccurred('light');
-    showCart();
-}
-
-// Оформление заказа
-function checkout() {
-    document.getElementById('orderModal').classList.add('show');
-    document.getElementById('orderName').value = user.firstName;
-}
-
-// Завершение заказа
-function completeOrder() {
-    const name = document.getElementById('orderName').value;
-    const comment = document.getElementById('orderComment').value;
-
-    if (!name) {
-        tg.showAlert('Введите имя');
-        return;
-    }
-
-    const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
-    const discount = appliedPromo ? subtotal * 0.05 : 0;
-    const total = subtotal - discount;
-
-    // Группируем товары для красивого вывода
-    const grouped = {};
-    cart.forEach(item => {
-        if (!grouped[item.id]) {
-            grouped[item.id] = {...item, count: 0};
-        }
-        grouped[item.id].count++;
-    });
-
-    let itemsList = '';
-    Object.values(grouped).forEach(item => {
-        itemsList += `• ${item.name} x${item.count} - ${item.price * item.count}₽\n`;
-    });
-
-    const order = {
-        id: Date.now(),
-        date: new Date().toLocaleDateString(),
-        items: cart.length,
-        total: total,
-        status: 'Новый',
-        name: name,
-        comment: comment,
-        promo: appliedPromo
-    };
-
-    user.orders.push(order);
-    saveToStorage();
-
-    // Отправляем менеджеру
-    const orderText = `
-🆕 НОВЫЙ ЗАКАЗ!
-    
-👤 Кто заказал: @${user.username} (${name})
-    
-📦 Что заказал:
-${itemsList}
-    
-💰 Сумма: ${total} ₽
-${appliedPromo ? `🎫 Промокод: ${appliedPromo} (скидка 5%)` : ''}
-    
-📝 Пожелание клиента:
-${comment || 'нет'}
-    `;
-
-    // Отправляем в бота
-    tg.sendData(JSON.stringify({
-        action: 'new_order',
-        text: orderText,
-        order: order,
-        cart: cart,
-        user: user
-    }));
-
-    // Очищаем корзину
-    cart = [];
-    appliedPromo = null;
-    saveToStorage();
-    updateCartBadge();
-
-    closeModal();
-    tg.showAlert('✅ Заказ отправлен! Менеджер свяжется с вами');
-    showHome();
-}
-
-// Закрытие модалки
-function closeModal() {
-    document.getElementById('orderModal').classList.remove('show');
-}
-
-// Навигация
 function navigateTo(page) {
     if (page === 'home') showHome();
     else if (page === 'favorites') showFavorites();
     else if (page === 'cart') showCart();
     else if (page === 'profile') showProfile();
+    else if (page === 'raffle') showRaffle();
+
+    // Обновляем активный пункт меню
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.page === page) {
+            btn.classList.add('active');
+        }
+    });
 }
 
 // ========== СОБЫТИЯ ==========
 
 // Категории
-document.querySelector('.categories-header').addEventListener('click', () => {
-    categoriesOpen = !categoriesOpen;
-    document.querySelector('.categories-header').classList.toggle('active');
-    document.querySelector('.categories-wrapper').classList.toggle('show');
+document.querySelector('.categories-header')?.addEventListener('click', () => {
+    const wrapper = document.querySelector('.categories-wrapper');
+    const header = document.querySelector('.categories-header');
+    if (wrapper && header) {
+        wrapper.classList.toggle('show');
+        header.classList.toggle('active');
+    }
 });
 
 // Сортировка
-document.querySelector('.sort-header').addEventListener('click', () => {
-    sortOpen = !sortOpen;
-    document.querySelector('.sort-header').classList.toggle('active');
-    document.querySelector('.sort-menu').classList.toggle('show');
+document.querySelector('.sort-header')?.addEventListener('click', () => {
+    const menu = document.querySelector('.sort-menu');
+    const header = document.querySelector('.sort-header');
+    if (menu && header) {
+        menu.classList.toggle('show');
+        header.classList.toggle('active');
+    }
 });
 
 // Выбор сортировки
@@ -607,9 +672,8 @@ document.querySelectorAll('.sort-item').forEach(item => {
         item.classList.add('active');
 
         currentSort = item.dataset.sort;
-        sortOpen = false;
-        document.querySelector('.sort-header').classList.remove('active');
-        document.querySelector('.sort-menu').classList.remove('show');
+        document.querySelector('.sort-menu')?.classList.remove('show');
+        document.querySelector('.sort-header')?.classList.remove('active');
 
         showHome();
     });
@@ -628,25 +692,23 @@ document.querySelectorAll('.category').forEach(btn => {
 // Нижняя навигация
 document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
         navigateTo(btn.dataset.page);
         tg.HapticFeedback.impactOccurred('light');
     });
 });
 
 // Поиск
-document.querySelector('.search-icon').addEventListener('click', () => {
+document.querySelector('.search-icon')?.addEventListener('click', () => {
     tg.showAlert('Поиск появится скоро');
 });
 
 // Баннер
-document.querySelector('.banner').addEventListener('click', () => {
+document.querySelector('.banner')?.addEventListener('click', () => {
     navigateTo('raffle');
 });
 
 // Админка - добавить товар
-document.getElementById('adminBtn').addEventListener('click', () => {
+document.getElementById('adminBtn')?.addEventListener('click', () => {
     if (isAdmin()) {
         addNewProduct();
     }
