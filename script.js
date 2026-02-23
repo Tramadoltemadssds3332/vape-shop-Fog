@@ -1,6 +1,7 @@
 let tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
+console.log("✅ Telegram WebApp инициализирован");
 
 // Данные пользователя
 let user = {
@@ -463,10 +464,15 @@ function closeModal() {
 
 // ========== ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ ЗАКАЗА ==========
 function completeOrder() {
+    console.log("🚀 НАЖАТА КНОПКА ЗАВЕРШИТЬ ЗАКАЗ");
+
     const nameInput = document.getElementById('orderName');
     const commentInput = document.getElementById('orderComment');
 
-    if (!nameInput) return;
+    if (!nameInput) {
+        console.error("❌ Нет поля nameInput");
+        return;
+    }
 
     const name = nameInput.value.trim();
     const comment = commentInput ? commentInput.value.trim() : '';
@@ -475,6 +481,14 @@ function completeOrder() {
         alert('Введите имя');
         return;
     }
+
+    if (cart.length === 0) {
+        alert('Корзина пуста');
+        closeModal();
+        return;
+    }
+
+    console.log("📦 Корзина:", cart);
 
     const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
     const discount = appliedPromo ? subtotal * 0.05 : 0;
@@ -509,7 +523,9 @@ function completeOrder() {
 
     const orderText = `🆕 <b>НОВЫЙ ЗАКАЗ!</b>\n\n👤 <b>Клиент:</b> @${user.username} (${name})\n\n📦 <b>Заказ:</b>\n${itemsList}\n💰 <b>Сумма:</b> ${total} ₽\n${appliedPromo ? `🎫 <b>Промокод:</b> ${appliedPromo} (скидка 5%)\n` : ''}\n📝 <b>Пожелание:</b>\n${comment || '—'}\n\n🕐 <b>Время:</b> ${order.date}`;
 
-    // Отправляем в бота
+    console.log("📤 Отправляю заказ:", orderText);
+
+    // ===== ЭТО САМОЕ ГЛАВНОЕ =====
     tg.sendData(JSON.stringify({
         action: 'new_order',
         text: orderText,
@@ -521,6 +537,8 @@ function completeOrder() {
             name: user.firstName
         }
     }));
+
+    console.log("✅ Данные отправлены в Telegram");
 
     cart = [];
     appliedPromo = null;
