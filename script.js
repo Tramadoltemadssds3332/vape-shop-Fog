@@ -375,7 +375,7 @@ function addToCart(productId) {
     updateCartBadge();
 
     tg.HapticFeedback.impactOccurred('light');
-    tg.showAlert(`${product.name} добавлен в корзину`);
+    alert(`${product.name} добавлен в корзину`);
 }
 
 function updateCartItem(productId, delta) {
@@ -412,10 +412,10 @@ function toggleFavorite(productId) {
 
     if (index === -1) {
         favorites.push({...product});
-        tg.showAlert('➕ В избранное');
+        alert('➕ В избранное');
     } else {
         favorites.splice(index, 1);
-        tg.showAlert('➖ Из избранного');
+        alert('➖ Из избранного');
     }
 
     saveToStorage();
@@ -437,7 +437,7 @@ function applyPromo() {
     }
 
     if (code === user.promoCode) {
-        tg.showAlert('Нельзя использовать свой промокод');
+        alert('Нельзя использовать свой промокод');
         return;
     }
 
@@ -472,7 +472,7 @@ function completeOrder() {
     const comment = commentInput ? commentInput.value.trim() : '';
 
     if (!name) {
-        tg.showAlert('Введите имя');
+        alert('Введите имя');
         return;
     }
 
@@ -509,7 +509,7 @@ function completeOrder() {
 
     const orderText = `🆕 <b>НОВЫЙ ЗАКАЗ!</b>\n\n👤 <b>Клиент:</b> @${user.username} (${name})\n\n📦 <b>Заказ:</b>\n${itemsList}\n💰 <b>Сумма:</b> ${total} ₽\n${appliedPromo ? `🎫 <b>Промокод:</b> ${appliedPromo} (скидка 5%)\n` : ''}\n📝 <b>Пожелание:</b>\n${comment || '—'}\n\n🕐 <b>Время:</b> ${order.date}`;
 
-    // ===== ЭТО ГЛАВНАЯ СТРОКА ОТПРАВКИ =====
+    // Отправляем в бота
     tg.sendData(JSON.stringify({
         action: 'new_order',
         text: orderText,
@@ -521,7 +521,6 @@ function completeOrder() {
             name: user.firstName
         }
     }));
-    // ========================================
 
     cart = [];
     appliedPromo = null;
@@ -529,19 +528,19 @@ function completeOrder() {
     updateCartBadge();
 
     closeModal();
-    tg.showAlert('✅ Заказ отправлен! Менеджер свяжется с вами');
+    alert('✅ Заказ отправлен! Менеджер свяжется с вами');
     showHome();
 }
 
 function participateRaffle() {
-    tg.showAlert('Вы участвуете в розыгрыше! Следите за новостями');
+    alert('Вы участвуете в розыгрыше! Следите за новостями');
 }
 
 // ========== АДМИНКА ==========
 
 function showAdminPanel() {
     if (user.id !== MAIN_ADMIN_ID) {
-        tg.showAlert('Только главный админ');
+        alert('Только главный админ');
         return;
     }
 
@@ -556,13 +555,13 @@ function showAdminPanel() {
         const newAdmin = prompt('Введите ID нового админа:');
         if (newAdmin && !admins.includes(parseInt(newAdmin))) {
             admins.push(parseInt(newAdmin));
-            tg.showAlert('Админ добавлен!');
+            alert('Админ добавлен!');
         }
     } else if (action === '2') {
         const removeAdmin = prompt('Введите ID админа для удаления:');
         if (removeAdmin && parseInt(removeAdmin) !== MAIN_ADMIN_ID) {
             admins = admins.filter(id => id !== parseInt(removeAdmin));
-            tg.showAlert('Админ удален!');
+            alert('Админ удален!');
         }
     }
 }
@@ -705,7 +704,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 const searchIcon = document.querySelector('.search-icon');
 if (searchIcon) {
     searchIcon.addEventListener('click', () => {
-        tg.showAlert('Поиск появится скоро');
+        alert('Поиск появится скоро');
     });
 }
 
