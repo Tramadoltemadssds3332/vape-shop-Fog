@@ -42,14 +42,13 @@ let products = [
     {id: 7, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: true, date: "2024-01-06"},
     {id: 8, name: "Испарители", price: 390, category: "accessories", image: "⚙️", desc: "Комплект 5 шт", stock: true, date: "2024-01-07"},
 
-    // ========== НОВЫЕ КАТЕГОРИИ ==========
     // Снюс
     {id: 9, name: "Siberia White Dry", price: 550, category: "snus", image: "❄️", desc: "Крепкий снюс", stock: true, date: "2024-01-08"},
     {id: 10, name: "Odens Cold Dry", price: 520, category: "snus", image: "🧊", desc: "Экстра сильный", stock: true, date: "2024-01-08"},
     {id: 11, name: "Lyft Freeze", price: 480, category: "snus", image: "💙", desc: "Никотиновые пакеты", stock: true, date: "2024-01-09"},
     {id: 12, name: "Velo Ice Cool", price: 490, category: "snus", image: "🧊", desc: "Мятный", stock: true, date: "2024-01-09"},
 
-    // Пластинки (никотиновые пастилки)
+    // Пластинки
     {id: 13, name: "White Fox", price: 530, category: "plates", image: "🦊", desc: "Никотиновые пластинки", stock: true, date: "2024-01-10"},
     {id: 14, name: "Zyn Spearmint", price: 510, category: "plates", image: "🌿", desc: "Мятные", stock: true, date: "2024-01-10"},
     {id: 15, name: "Skruf Cassice", price: 540, category: "plates", image: "🍊", desc: "Апельсин", stock: true, date: "2024-01-11"},
@@ -84,34 +83,18 @@ function toggleTheme() {
 }
 
 function applyTheme() {
-    const root = document.documentElement;
     if (darkMode) {
-        // Темная тема
-        root.style.setProperty('--bg-color', '#121212');
-        root.style.setProperty('--surface-color', '#1e1e1e');
-        root.style.setProperty('--text-color', '#ffffff');
-        root.style.setProperty('--text-secondary', '#888888');
-        root.style.setProperty('--border-color', '#333333');
-        root.style.setProperty('--card-bg', '#1e1e1e');
-        root.style.setProperty('--header-bg', '#1e1e1e');
-        root.style.setProperty('--nav-bg', '#1e1e1e');
-        document.body.style.background = '#121212';
+        document.body.classList.add('dark-mode');
     } else {
-        // Светлая тема
-        root.style.setProperty('--bg-color', '#f5f5f7');
-        root.style.setProperty('--surface-color', '#ffffff');
-        root.style.setProperty('--text-color', '#333333');
-        root.style.setProperty('--text-secondary', '#666666');
-        root.style.setProperty('--border-color', '#f0f0f0');
-        root.style.setProperty('--card-bg', '#ffffff');
-        root.style.setProperty('--header-bg', '#ffffff');
-        root.style.setProperty('--nav-bg', '#ffffff');
-        document.body.style.background = '#f5f5f7';
+        document.body.classList.remove('dark-mode');
     }
 }
 
 // ========== ПОИСК ==========
 function showSearch() {
+    currentPage = 'search';
+    toggleFilters(false);
+
     const content = document.getElementById('main-content');
     if (!content) return;
 
@@ -199,6 +182,33 @@ function uploadProductImage(productId) {
         }
     };
     input.click();
+}
+
+// ========== ГЕНЕРАЦИЯ ВАРИАНТОВ ВРЕМЕНИ ==========
+function generateTimeOptions(workHoursStr) {
+    try {
+        const times = workHoursStr.split('-').map(t => t.trim());
+        const start = times[0];
+        const end = times[1];
+
+        if (!start || !end) return '<option value="">Не указано</option>';
+
+        const startHour = parseInt(start.split(':')[0]);
+        const endHour = parseInt(end.split(':')[0]);
+
+        let options = '';
+        for (let hour = startHour; hour <= endHour; hour++) {
+            const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+            options += `<option value="${timeStr}">${timeStr}</option>`;
+            if (hour < endHour) {
+                const halfStr = `${hour.toString().padStart(2, '0')}:30`;
+                options += `<option value="${halfStr}">${halfStr}</option>`;
+            }
+        }
+        return options;
+    } catch (e) {
+        return '<option value="">Ошибка формата</option>';
+    }
 }
 
 // ========== БОКОВОЕ МЕНЮ ==========
@@ -374,7 +384,7 @@ function showHome() {
 
         html += `
             <div class="product-card">
-                <div class="product-image" onclick="${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
+                <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
                     ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
                 </div>
                 <div class="product-title">${product.name}</div>
@@ -670,23 +680,7 @@ function toggleFavorite(productId) {
 
 function showNotification(text, type) {
     const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 30px;
-        font-size: 14px;
-        z-index: 2000;
-        animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        text-align: center;
-        min-width: 200px;
-        font-weight: 500;
-    `;
+    notification.className = 'notification';
     notification.textContent = text;
     document.body.appendChild(notification);
 
@@ -717,11 +711,43 @@ function applyPromo() {
     showCart();
 }
 
+// ========== ОФОРМЛЕНИЕ ЗАКАЗА ==========
 function checkout() {
     const modal = document.getElementById('orderModal');
     const nameInput = document.getElementById('orderName');
+    const workHoursInfo = document.querySelector('.work-hours-info');
 
     if (modal && nameInput) {
+        // Обновляем рабочее время
+        const workHoursSpan = document.getElementById('workHoursText');
+        if (workHoursSpan) {
+            workHoursSpan.textContent = workHours;
+        }
+
+        // Создаем или обновляем селект времени
+        let timeSelect = document.getElementById('deliveryTime');
+        if (!timeSelect) {
+            const workHoursDiv = document.querySelector('.work-hours-info');
+            if (workHoursDiv) {
+                const selectHtml = `
+                    <div class="time-select-wrapper">
+                        <label for="deliveryTime">Выберите время доставки:</label>
+                        <select id="deliveryTime" class="time-select">
+                            <option value="">-- Выберите время --</option>
+                            ${generateTimeOptions(workHours)}
+                        </select>
+                    </div>
+                `;
+                workHoursDiv.insertAdjacentHTML('afterend', selectHtml);
+            }
+        } else {
+            // Обновляем опции
+            timeSelect.innerHTML = `
+                <option value="">-- Выберите время --</option>
+                ${generateTimeOptions(workHours)}
+            `;
+        }
+
         modal.classList.add('show');
         nameInput.value = user.firstName;
     }
@@ -738,11 +764,13 @@ function completeOrder() {
 
     const nameInput = document.getElementById('orderName');
     const commentInput = document.getElementById('orderComment');
+    const timeSelect = document.getElementById('deliveryTime');
 
     if (!nameInput) return;
 
     const name = nameInput.value.trim();
     const comment = commentInput ? commentInput.value.trim() : '';
+    const deliveryTime = timeSelect ? timeSelect.value : 'Не выбрано';
 
     if (!name) {
         showNotification('❌ Введите имя', 'error');
@@ -780,28 +808,45 @@ function completeOrder() {
         status: 'Новый',
         name: name,
         comment: comment,
+        deliveryTime: deliveryTime,
         promo: appliedPromo
     };
 
     user.orders.push(order);
     saveToStorage();
 
-    const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 Клиент: @${user.username} (${name})\n\n📦 Заказ:\n${itemsList}\n💰 Сумма: ${total} ₽\n${appliedPromo ? `🎫 Промокод: ${appliedPromo} (скидка 5%)\n` : ''}\n📝 Пожелание:\n${comment || '—'}\n\n🕐 Время: ${order.date}`;
+    const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 Клиент: @${user.username} (${name})\n\n📦 Заказ:\n${itemsList}\n💰 Сумма: ${total} ₽\n⏰ Время доставки: ${deliveryTime}\n${appliedPromo ? `🎫 Промокод: ${appliedPromo} (скидка 5%)\n` : ''}\n📝 Пожелание:\n${comment || '—'}\n\n🕐 Время заказа: ${order.date}`;
 
-    // Отправляем через Telegram WebApp
+    // ===== ОТПРАВКА ЧЕРЕЗ TELEGRAM WEBAPP =====
     tg.sendData(JSON.stringify({
         action: 'new_order',
         text: orderText
     }));
 
-    // Очищаем корзину
+    // ===== ДУБЛИРУЮЩАЯ ОТПРАВКА ЧЕРЕЗ HTTP =====
+    fetch(`https://api.telegram.org/bot8384387938:AAEuhsPHVOAGZHDVOjCx9L9hqBMsTmDf-Rg/sendMessage`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            chat_id: 7602382626,
+            text: orderText,
+            parse_mode: 'HTML'
+        })
+    })
+    .then(response => response.json())
+    .then(data => console.log('✅ HTTP отправка:', data))
+    .catch(error => console.error('❌ HTTP ошибка:', error));
+
+    console.log("✅ Данные отправлены в Telegram");
+
     cart = [];
     appliedPromo = null;
     saveToStorage();
     updateCartBadge();
 
     closeModal();
-
     showNotification('✅ Заказ отправлен! Менеджер свяжется с вами', 'success');
     showHome();
 }
@@ -1004,96 +1049,3 @@ if (adminBtn) {
         }
     });
 }
-
-// Добавляем CSS переменные и анимации
-const style = document.createElement('style');
-style.textContent = `
-    :root {
-        --bg-color: #f5f5f7;
-        --surface-color: #ffffff;
-        --text-color: #333333;
-        --text-secondary: #666666;
-        --border-color: #f0f0f0;
-        --card-bg: #ffffff;
-        --header-bg: #ffffff;
-        --nav-bg: #ffffff;
-    }
-    
-    body {
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        transition: background-color 0.3s, color 0.3s;
-    }
-    
-    .app {
-        background: var(--surface-color);
-    }
-    
-    .header, .categories-wrapper, .sort-section, .bottom-nav {
-        background: var(--header-bg);
-        border-color: var(--border-color);
-    }
-    
-    .product-card {
-        background: var(--card-bg);
-        border-color: var(--border-color);
-    }
-    
-    .cart-item, .cart-summary, .history-section {
-        background: var(--surface-color);
-        border-color: var(--border-color);
-    }
-    
-    .product-title, .cart-item-info h4, .profile-info h3 {
-        color: var(--text-color);
-    }
-    
-    .product-price {
-        color: #FF6B6B;
-    }
-    
-    @keyframes slideDown {
-        from { opacity: 0; transform: translate(-50%, -20px); }
-        to { opacity: 1; transform: translate(-50%, 0); }
-    }
-    
-    @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
-    }
-    
-    .search-page {
-        padding: 15px;
-    }
-    
-    .search-header {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .search-header input {
-        flex: 1;
-        padding: 12px 15px;
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        font-size: 16px;
-        background: var(--surface-color);
-        color: var(--text-color);
-    }
-    
-    .search-button {
-        padding: 12px 20px;
-        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-        border: none;
-        border-radius: 10px;
-        color: white;
-        font-weight: 500;
-        cursor: pointer;
-    }
-    
-    .search-results {
-        margin-top: 20px;
-    }
-`;
-document.head.appendChild(style);

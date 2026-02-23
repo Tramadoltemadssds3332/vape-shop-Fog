@@ -955,6 +955,46 @@ body {
     font-weight: 600;
 }
 
+/* Стили для выбора времени */
+.time-select-wrapper {
+    margin: 15px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s;
+}
+
+.time-select-wrapper label {
+    display: block;
+    margin-bottom: 8px;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.time-select {
+    width: 100%;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 10px;
+    color: #333;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.time-select:hover {
+    border-color: #FF6B6B;
+}
+
+.time-select:focus {
+    outline: none;
+    border-color: #FF6B6B;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
 .modal-buttons {
     display: flex;
     gap: 10px;
@@ -1028,7 +1068,7 @@ body {
     transform: scale(1.05);
 }
 
-/* Кнопка админки (ИСПРАВЛЕНО) */
+/* Кнопка админки */
 .admin-button {
     position: fixed;
     right: 20px;
@@ -1128,7 +1168,7 @@ body {
     background: linear-gradient(135deg, #4ECDC4 0%, #FF6B6B 100%);
 }
 
-/* ========== CSS ПЕРЕМЕННЫЕ И ТЕМНАЯ ТЕМА ========== */
+/* ========== CSS ПЕРЕМЕННЫЕ ========== */
 :root {
     --bg-color: #f5f5f7;
     --surface-color: #ffffff;
@@ -1168,65 +1208,189 @@ body {
     color: var(--text-color);
 }
 
-/* Темная тема */
-.dark-mode {
+/* ========== ТЕМНАЯ ТЕМА ========== */
+body.dark-mode {
     --bg-color: #121212;
     --surface-color: #1e1e1e;
     --text-color: #ffffff;
-    --text-secondary: #888888;
+    --text-secondary: #aaaaaa;
     --border-color: #333333;
     --card-bg: #1e1e1e;
     --header-bg: #1e1e1e;
     --nav-bg: #1e1e1e;
 }
 
-.dark-mode .work-hours-info {
-    background: linear-gradient(135deg, #2d3436 0%, #1e1e1e 100%);
-    color: #dfe6e9;
-}
-
-.dark-mode .search-header input {
-    background: #2d2d2d;
-    border-color: #404040;
-    color: #ffffff;
-}
-
-.dark-mode .search-header input::placeholder {
-    color: #888;
-}
-
-.dark-mode .empty-state i {
-    background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.dark-mode .modal-content {
+body.dark-mode .side-menu {
     background: #1e1e1e;
 }
 
-.dark-mode .modal-content h3 {
+body.dark-mode .side-menu-item {
     color: #ffffff;
 }
 
-.dark-mode .form-group input,
-.dark-mode .form-group textarea {
+body.dark-mode .side-menu-item:hover {
+    background: #2d2d2d;
+}
+
+body.dark-mode .side-menu-item i:first-child {
+    color: #FF6B6B;
+}
+
+body.dark-mode .modal-content {
+    background: #1e1e1e;
+    border: 1px solid #333;
+}
+
+body.dark-mode .modal-content h3 {
+    color: #ffffff;
+}
+
+body.dark-mode .form-group label {
+    color: #aaa;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea {
     background: #2d2d2d;
     border-color: #404040;
     color: #ffffff;
 }
 
-.dark-mode .form-group label {
+body.dark-mode .form-group input::placeholder,
+body.dark-mode .form-group textarea::placeholder {
     color: #888;
 }
 
-.dark-mode .work-hours-info {
+body.dark-mode .form-group small {
+    color: #888;
+}
+
+body.dark-mode .work-hours-info {
     background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
     color: #e0e0e0;
     border-left-color: #FF6B6B;
 }
 
-/* Анимации */
+body.dark-mode .work-hours-info i {
+    color: #FF6B6B;
+}
+
+body.dark-mode .work-hours-info strong {
+    color: #4ECDC4;
+}
+
+body.dark-mode .time-select-wrapper {
+    background: #2d2d2d;
+    border-color: #404040;
+}
+
+body.dark-mode .time-select-wrapper label {
+    color: #aaa;
+}
+
+body.dark-mode .time-select {
+    background: #1e1e1e;
+    border-color: #404040;
+    color: #ffffff;
+}
+
+body.dark-mode .time-select option {
+    background: #1e1e1e;
+    color: #ffffff;
+}
+
+body.dark-mode .modal-btn.cancel {
+    background: #2d2d2d;
+    color: #aaa;
+}
+
+body.dark-mode .modal-btn.cancel:hover {
+    background: #3d3d3d;
+}
+
+body.dark-mode .cart-item {
+    background: #2d2d2d;
+}
+
+body.dark-mode .cart-summary {
+    background: #2d2d2d;
+}
+
+body.dark-mode .cart-item-controls button {
+    background: #1e1e1e;
+    color: #aaa;
+}
+
+body.dark-mode .cart-item-controls button:hover {
+    background: #FF6B6B;
+    color: white;
+}
+
+body.dark-mode .summary-row {
+    color: #aaa;
+}
+
+body.dark-mode .summary-row.total {
+    color: #ffffff;
+    border-top-color: #404040;
+}
+
+body.dark-mode .history-section {
+    background: #2d2d2d;
+}
+
+body.dark-mode .history-section h3 {
+    color: #ffffff;
+}
+
+body.dark-mode .order-item {
+    border-bottom-color: #404040;
+    color: #aaa;
+}
+
+body.dark-mode .order-header {
+    color: #ffffff;
+}
+
+body.dark-mode .promo-section input {
+    background: #2d2d2d;
+    border-color: #404040;
+    color: #ffffff;
+}
+
+body.dark-mode .promo-section input::placeholder {
+    color: #888;
+}
+
+body.dark-mode .clear-cart {
+    background: #2d2d2d;
+    color: #aaa;
+}
+
+body.dark-mode .clear-cart:hover {
+    background: #FF6B6B;
+    color: white;
+}
+
+body.dark-mode .search-header input {
+    background: #2d2d2d;
+    border-color: #404040;
+    color: #ffffff;
+}
+
+body.dark-mode .search-header {
+    background: #1e1e1e;
+}
+
+body.dark-mode .empty-state h3 {
+    color: #ffffff;
+}
+
+body.dark-mode .empty-state p {
+    color: #aaa;
+}
+
+/* ========== АНИМАЦИИ ========== */
 @keyframes slideDown {
     from { opacity: 0; transform: translate(-50%, -20px); }
     to { opacity: 1; transform: translate(-50%, 0); }
