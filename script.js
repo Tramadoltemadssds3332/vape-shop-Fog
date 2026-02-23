@@ -27,32 +27,32 @@ function isAdmin() {
 // ========== ТОВАРЫ ==========
 let products = [
     // Жидкости
-    {id: 1, name: "HS Bank 100ml", price: 890, category: "liquids", image: "🥤", desc: "Фруктовый микс", stock: true, date: "2024-01-01"},
-    {id: 2, name: "Sadboy 60ml", price: 690, category: "liquids", image: "🍓", desc: "Клубничный джем", stock: true, date: "2024-01-02"},
+    {id: 1, name: "HS Bank 100ml", price: 890, category: "liquids", image: "🥤", desc: "Фруктовый микс", stock: 15, date: "2024-01-01"},
+    {id: 2, name: "Sadboy 60ml", price: 690, category: "liquids", image: "🍓", desc: "Клубничный джем", stock: 8, date: "2024-01-02"},
 
     // Pod-системы
-    {id: 3, name: "Pod System X", price: 2490, category: "pods", image: "💨", desc: "Компактная pod-система", stock: true, date: "2024-01-03"},
-    {id: 4, name: "GeekVape Hero", price: 3300, category: "pods", image: "🦸", desc: "Влагозащита IP68", stock: true, date: "2024-01-05"},
+    {id: 3, name: "Pod System X", price: 2490, category: "pods", image: "💨", desc: "Компактная pod-система", stock: 5, date: "2024-01-03"},
+    {id: 4, name: "GeekVape Hero", price: 3300, category: "pods", image: "🦸", desc: "Влагозащита IP68", stock: 3, date: "2024-01-05"},
 
     // Одноразовые
-    {id: 5, name: "Elf Bar 1500", price: 1290, category: "disposable", image: "⚡", desc: "1500 затяжек", stock: true, date: "2024-01-04"},
-    {id: 6, name: "HQD Cuvie", price: 990, category: "disposable", image: "💨", desc: "Компактный", stock: true, date: "2024-01-06"},
+    {id: 5, name: "Elf Bar 1500", price: 1290, category: "disposable", image: "⚡", desc: "1500 затяжек", stock: 12, date: "2024-01-04"},
+    {id: 6, name: "HQD Cuvie", price: 990, category: "disposable", image: "💨", desc: "Компактный", stock: 20, date: "2024-01-06"},
 
     // Аксессуары
-    {id: 7, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: true, date: "2024-01-06"},
-    {id: 8, name: "Испарители", price: 390, category: "accessories", image: "⚙️", desc: "Комплект 5 шт", stock: true, date: "2024-01-07"},
+    {id: 7, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: 7, date: "2024-01-06"},
+    {id: 8, name: "Испарители", price: 390, category: "accessories", image: "⚙️", desc: "Комплект 5 шт", stock: 10, date: "2024-01-07"},
 
     // Снюс
-    {id: 9, name: "Siberia White Dry", price: 550, category: "snus", image: "❄️", desc: "Крепкий снюс", stock: true, date: "2024-01-08"},
-    {id: 10, name: "Odens Cold Dry", price: 520, category: "snus", image: "🧊", desc: "Экстра сильный", stock: true, date: "2024-01-08"},
-    {id: 11, name: "Lyft Freeze", price: 480, category: "snus", image: "💙", desc: "Никотиновые пакеты", stock: true, date: "2024-01-09"},
-    {id: 12, name: "Velo Ice Cool", price: 490, category: "snus", image: "🧊", desc: "Мятный", stock: true, date: "2024-01-09"},
+    {id: 9, name: "Siberia White Dry", price: 550, category: "snus", image: "❄️", desc: "Крепкий снюс", stock: 6, date: "2024-01-08"},
+    {id: 10, name: "Odens Cold Dry", price: 520, category: "snus", image: "🧊", desc: "Экстра сильный", stock: 4, date: "2024-01-08"},
+    {id: 11, name: "Lyft Freeze", price: 480, category: "snus", image: "💙", desc: "Никотиновые пакеты", stock: 9, date: "2024-01-09"},
+    {id: 12, name: "Velo Ice Cool", price: 490, category: "snus", image: "🧊", desc: "Мятный", stock: 11, date: "2024-01-09"},
 
     // Пластинки
-    {id: 13, name: "White Fox", price: 530, category: "plates", image: "🦊", desc: "Никотиновые пластинки", stock: true, date: "2024-01-10"},
-    {id: 14, name: "Zyn Spearmint", price: 510, category: "plates", image: "🌿", desc: "Мятные", stock: true, date: "2024-01-10"},
-    {id: 15, name: "Skruf Cassice", price: 540, category: "plates", image: "🍊", desc: "Апельсин", stock: true, date: "2024-01-11"},
-    {id: 16, name: "G.4 Deep Freeze", price: 560, category: "plates", image: "❄️", desc: "Экстра мятные", stock: true, date: "2024-01-11"}
+    {id: 13, name: "White Fox", price: 530, category: "plates", image: "🦊", desc: "Никотиновые пластинки", stock: 5, date: "2024-01-10"},
+    {id: 14, name: "Zyn Spearmint", price: 510, category: "plates", image: "🌿", desc: "Мятные", stock: 7, date: "2024-01-10"},
+    {id: 15, name: "Skruf Cassice", price: 540, category: "plates", image: "🍊", desc: "Апельсин", stock: 3, date: "2024-01-11"},
+    {id: 16, name: "G.4 Deep Freeze", price: 560, category: "plates", image: "❄️", desc: "Экстра мятные", stock: 4, date: "2024-01-11"}
 ];
 
 let cart = [];
@@ -63,6 +63,38 @@ let appliedPromo = null;
 let currentPage = 'home';
 let searchQuery = '';
 let workHours = '10:00 - 22:00'; // Рабочее время по умолчанию
+
+// ========== СИНХРОНИЗАЦИЯ ТОВАРОВ ==========
+async function syncProducts() {
+    try {
+        tg.sendData(JSON.stringify({
+            action: 'get_products'
+        }));
+
+        setTimeout(() => {
+            const savedProducts = localStorage.getItem('global_products');
+            if (savedProducts) {
+                products = JSON.parse(savedProducts);
+                showNotification('📦 Товары обновлены', 'sync');
+                if (currentPage === 'home') showHome();
+            }
+        }, 1000);
+    } catch (e) {
+        console.log('Ошибка синхронизации');
+    }
+}
+
+function broadcastProducts() {
+    if (!isAdmin()) return;
+
+    tg.sendData(JSON.stringify({
+        action: 'update_products',
+        products: products
+    }));
+
+    localStorage.setItem('global_products', JSON.stringify(products));
+    showNotification('✅ Товары отправлены всем', 'success');
+}
 
 // ========== ФУНКЦИИ ==========
 
@@ -140,8 +172,10 @@ function performSearch() {
         const inFav = favorites.some(f => f.id === product.id);
         html += `
             <div class="product-card">
-                <div class="product-image">${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}</div>
-                <div class="product-title">${product.name}</div>
+                <div class="product-image" onclick="showProductDetails(${product.id})">
+                    ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
+                </div>
+                <div class="product-title" onclick="showProductDetails(${product.id})">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <div style="display: flex; gap: 5px;">
                     <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">
@@ -151,6 +185,9 @@ function performSearch() {
                         ${inFav ? '❤️' : '🤍'}
                     </button>
                 </div>
+                <div class="stock-badge ${product.stock < 5 ? 'low-stock' : ''}">
+                    ${product.stock > 0 ? `✅ В наличии: ${product.stock} шт` : '❌ Нет в наличии'}
+                </div>
             </div>
         `;
     });
@@ -158,7 +195,90 @@ function performSearch() {
     resultsDiv.innerHTML = html;
 }
 
-// ========== ЗАГРУЗКА ФОТО ДЛЯ АДМИНОВ (фото видят ВСЕ пользователи) ==========
+// ========== ДЕТАЛЬНАЯ ИНФОРМАЦИЯ О ТОВАРЕ ==========
+function showProductDetails(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const content = document.getElementById('main-content');
+    const inFav = favorites.some(f => f.id === product.id);
+
+    // Определяем статус наличия
+    let stockStatus = '';
+    let stockClass = '';
+    if (product.stock <= 0) {
+        stockStatus = '❌ Нет в наличии';
+        stockClass = 'out-of-stock';
+    } else if (product.stock < 5) {
+        stockStatus = `⚠️ Мало: ${product.stock} шт`;
+        stockClass = 'low-stock';
+    } else {
+        stockStatus = `✅ В наличии: ${product.stock} шт`;
+        stockClass = 'in-stock';
+    }
+
+    content.innerHTML = `
+        <div class="product-details-page">
+            <button class="back-button" onclick="showHome()">
+                <i class="fas fa-arrow-left"></i> Назад
+            </button>
+            
+            <div class="product-details-card">
+                <div class="product-details-image">
+                    ${product.image.startsWith('data:') ? 
+                        `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:20px;">` : 
+                        `<div class="product-emoji">${product.image}</div>`
+                    }
+                </div>
+                
+                <h2 class="product-details-title">${product.name}</h2>
+                
+                <div class="product-details-price">
+                    ${product.price} ₽
+                </div>
+                
+                <div class="product-details-stock ${stockClass}">
+                    ${stockStatus}
+                </div>
+                
+                <div class="product-details-desc">
+                    <h3>Описание</h3>
+                    <p>${product.desc}</p>
+                </div>
+                
+                <div class="product-details-category">
+                    <span class="category-tag ${product.category}">
+                        ${getCategoryName(product.category)}
+                    </span>
+                </div>
+                
+                <div class="product-details-actions">
+                    <button class="add-to-cart-btn" onclick="addToCart(${product.id})">
+                        🛒 Добавить в корзину
+                    </button>
+                    <button class="favorite-btn ${inFav ? 'active' : ''}" onclick="toggleFavorite(${product.id})">
+                        ${inFav ? '❤️ В избранном' : '🤍 В избранное'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ========== ПОЛУЧЕНИЕ НАЗВАНИЯ КАТЕГОРИИ ==========
+function getCategoryName(category) {
+    const categories = {
+        'liquids': '💧 Жидкости',
+        'pods': '💨 Pod-системы',
+        'disposable': '⚡ Одноразовые',
+        'accessories': '🔧 Аксессуары',
+        'snus': '❄️ Снюс',
+        'plates': '📦 Пластинки'
+    };
+    return categories[category] || category;
+}
+
+// ========== ЗАГРУЗКА ФОТО ДЛЯ АДМИНОВ ==========
 function uploadProductImage(productId) {
     if (!isAdmin()) {
         showNotification('⛔ Только для админов', 'error');
@@ -175,15 +295,10 @@ function uploadProductImage(productId) {
             reader.onload = (event) => {
                 const product = products.find(p => p.id === productId);
                 if (product) {
-                    // Сохраняем фото в товар (теперь увидят ВСЕ пользователи)
                     product.image = event.target.result;
-
-                    // Сохраняем в localStorage чтобы фото не пропало
                     saveToStorage();
-
-                    showNotification('✅ Фото загружено! Теперь его видят все', 'success');
-
-                    // Обновляем отображение
+                    broadcastProducts();
+                    showNotification('✅ Фото загружено и отправлено всем!', 'success');
                     if (currentPage === 'home') showHome();
                 }
             };
@@ -193,12 +308,11 @@ function uploadProductImage(productId) {
     input.click();
 }
 
-// ========== ГЕНЕРАЦИЯ ДАТ (начиная со следующего дня) ==========
+// ========== ГЕНЕРАЦИЯ ДАТ ==========
 function generateDateOptions() {
     const options = [];
     const today = new Date();
 
-    // Генерируем даты на 14 дней вперед, начиная с ЗАВТРАШНЕГО дня
     for (let i = 1; i <= 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
@@ -207,7 +321,6 @@ function generateDateOptions() {
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const year = date.getFullYear();
 
-        // Название дня недели
         const weekdays = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
         const weekday = weekdays[date.getDay()];
 
@@ -267,7 +380,6 @@ menuButton?.addEventListener('click', openMenu);
 closeMenu?.addEventListener('click', closeMenuFunc);
 overlay?.addEventListener('click', closeMenuFunc);
 
-// Обновляем боковое меню с переключателем темы
 function updateSideMenu() {
     const menuItems = document.querySelector('.side-menu-items');
     if (menuItems) {
@@ -327,6 +439,7 @@ function updateIndicator() {
 (function init() {
     applyTheme();
     loadFromStorage();
+    syncProducts();
     showHome();
     setTimeout(updateIndicator, 100);
     updateSideMenu();
@@ -348,10 +461,9 @@ function loadFromStorage() {
         const savedOrders = localStorage.getItem(`orders_${user.id}`);
         if (savedOrders) user.orders = JSON.parse(savedOrders);
 
-        // Загружаем товары (включая фото от админов!)
-        const savedProducts = localStorage.getItem('products');
-        if (savedProducts) {
-            products = JSON.parse(savedProducts);
+        const globalProducts = localStorage.getItem('global_products');
+        if (globalProducts) {
+            products = JSON.parse(globalProducts);
         }
     } catch (e) {
         console.log('Ошибка загрузки');
@@ -365,9 +477,7 @@ function saveToStorage() {
         localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
         localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
         localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
-
-        // Сохраняем товары с фото, чтобы все пользователи их видели
-        localStorage.setItem('products', JSON.stringify(products));
+        localStorage.setItem('global_products', JSON.stringify(products));
     } catch (e) {
         console.log('Ошибка сохранения');
     }
@@ -403,8 +513,7 @@ function sortProducts(products) {
     }
 }
 
-// ========== СТРАНИЦЫ ==========
-
+// ========== ГЛАВНАЯ СТРАНИЦА ==========
 function showHome() {
     currentPage = 'home';
     toggleFilters(true);
@@ -423,15 +532,32 @@ function showHome() {
     filtered.forEach(product => {
         const inFav = favorites.some(f => f.id === product.id);
 
+        // Определяем класс для статуса наличия
+        let stockClass = '';
+        let stockText = '';
+        if (product.stock <= 0) {
+            stockClass = 'out-of-stock';
+            stockText = '❌ Нет';
+        } else if (product.stock < 5) {
+            stockClass = 'low-stock';
+            stockText = `⚠️ ${product.stock}`;
+        } else {
+            stockClass = 'in-stock';
+            stockText = `✅ ${product.stock}`;
+        }
+
         html += `
             <div class="product-card">
-                <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
+                <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="${isAdmin() ? `uploadProductImage(${product.id})` : `showProductDetails(${product.id})`}">
                     ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
                 </div>
-                <div class="product-title">${product.name}</div>
+                <div class="product-title" onclick="showProductDetails(${product.id})">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
+                <div class="stock-indicator ${stockClass}" onclick="showProductDetails(${product.id})">
+                    ${stockText}
+                </div>
                 <div style="display: flex; gap: 5px;">
-                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">
+                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
                         🛒 В корзину
                     </button>
                     <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#FF6B6B' : 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)'}" onclick="toggleFavorite(${product.id})">
@@ -476,8 +602,10 @@ function showFavorites() {
     favorites.forEach(product => {
         html += `
             <div class="product-card">
-                <div class="product-image">${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}</div>
-                <div class="product-title">${product.name}</div>
+                <div class="product-image" onclick="showProductDetails(${product.id})">
+                    ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
+                </div>
+                <div class="product-title" onclick="showProductDetails(${product.id})">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <button class="add-to-cart" onclick="addToCart(${product.id})">
                     🛒 В корзину
@@ -639,24 +767,10 @@ function showProfile() {
     `;
 }
 
+// ========== РОЗЫГРЫШ ==========
 function showRaffle() {
-    currentPage = 'raffle';
-    toggleFilters(false);
-
-    const content = document.getElementById('main-content');
-    if (!content) return;
-
-    content.innerHTML = `
-        <div class="empty-state">
-            <i class="fas fa-gift" style="color: #4ECDC4;"></i>
-            <h3>🎉 РОЗЫГРЫШ</h3>
-            <p>Fog Shop</p>
-            <p style="margin-top: 20px;">Участвуй и выигрывай!</p>
-            <button style="margin-top: 20px;" onclick="participateRaffle()">
-                Участвовать
-            </button>
-        </div>
-    `;
+    // Открываем пост в Telegram
+    tg.openTelegramLink('https://t.me/c/3867496075/42');
 }
 
 // ========== ДЕЙСТВИЯ ==========
@@ -664,6 +778,11 @@ function showRaffle() {
 function addToCart(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
+
+    if (product.stock <= 0) {
+        showNotification('❌ Товара нет в наличии', 'error');
+        return;
+    }
 
     cart.push({...product});
     saveToStorage();
@@ -717,6 +836,7 @@ function toggleFavorite(productId) {
     tg.HapticFeedback.impactOccurred('light');
     if (currentPage === 'favorites') showFavorites();
     else if (currentPage === 'home') showHome();
+    else if (currentPage === 'product-details') showProductDetails(productId);
 }
 
 function showNotification(text, type) {
@@ -756,16 +876,13 @@ function applyPromo() {
 function checkout() {
     const modal = document.getElementById('orderModal');
     const nameInput = document.getElementById('orderName');
-    const workHoursInfo = document.querySelector('.work-hours-info');
 
     if (modal && nameInput) {
-        // Обновляем рабочее время
         const workHoursSpan = document.getElementById('workHoursText');
         if (workHoursSpan) {
             workHoursSpan.textContent = workHours;
         }
 
-        // Добавляем поля доставки если их нет
         if (!document.getElementById('deliveryFields')) {
             addDeliveryFields();
         }
@@ -775,12 +892,10 @@ function checkout() {
     }
 }
 
-// ========== ДОБАВЛЕНИЕ ПОЛЕЙ ДОСТАВКИ ==========
 function addDeliveryFields() {
     const workHoursDiv = document.querySelector('.work-hours-info');
     if (!workHoursDiv) return;
 
-    // Удаляем старые поля если есть
     const oldFields = document.getElementById('deliveryFields');
     if (oldFields) oldFields.remove();
 
@@ -827,7 +942,6 @@ function closeModal() {
     if (modal) modal.classList.remove('show');
 }
 
-// ========== ОТПРАВКА ЗАКАЗА ==========
 function completeOrder() {
     console.log("🚀 НАЖАТА КНОПКА ЗАВЕРШИТЬ ЗАКАЗ");
 
@@ -844,7 +958,6 @@ function completeOrder() {
     const deliveryTime = timeSelect ? timeSelect.value : 'Не выбрано';
     const deliveryDate = dateSelect ? dateSelect.value : 'Не выбрана';
 
-    // Получаем выбранное место
     let deliveryPlace = 'Не выбрано';
     for (const radio of placeRadios) {
         if (radio.checked) {
@@ -910,13 +1023,11 @@ function completeOrder() {
 
     const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 Клиент: @${user.username} (${name})\n\n📦 Заказ:\n${itemsList}\n💰 Сумма: ${total} ₽\n📍 Место: ${deliveryPlace}\n📅 Дата: ${deliveryDate}\n⏰ Время: ${deliveryTime}\n${appliedPromo ? `🎫 Промокод: ${appliedPromo} (скидка 5%)\n` : ''}\n📝 Пожелание:\n${comment || '—'}\n\n🕐 Время заказа: ${order.date}`;
 
-    // ===== ОТПРАВКА ЧЕРЕЗ TELEGRAM WEBAPP =====
     tg.sendData(JSON.stringify({
         action: 'new_order',
         text: orderText
     }));
 
-    // ===== ДУБЛИРУЮЩАЯ ОТПРАВКА ЧЕРЕЗ HTTP =====
     fetch(`https://api.telegram.org/bot8384387938:AAEuhsPHVOAGZHDVOjCx9L9hqBMsTmDf-Rg/sendMessage`, {
         method: 'POST',
         headers: {
@@ -942,10 +1053,6 @@ function completeOrder() {
     closeModal();
     showNotification('✅ Заказ отправлен! Менеджер свяжется с вами', 'success');
     showHome();
-}
-
-function participateRaffle() {
-    showNotification('🎉 Вы участвуете в розыгрыше!', 'raffle');
 }
 
 // ========== АДМИНКА ==========
@@ -999,12 +1106,16 @@ function editProduct(id) {
     const newDesc = prompt('Описание:', product.desc);
     if (newDesc) product.desc = newDesc;
 
+    const newStock = prompt('Количество на складе:', product.stock);
+    if (newStock) product.stock = parseInt(newStock);
+
     const newCategory = prompt('Категория (liquids/pods/disposable/accessories/snus/plates):', product.category);
     if (newCategory) product.category = newCategory;
 
     saveToStorage();
+    broadcastProducts();
     showHome();
-    showNotification('✅ Товар обновлен', 'success');
+    showNotification('✅ Товар обновлен и отправлен всем!', 'success');
 }
 
 function deleteProduct(id) {
@@ -1013,8 +1124,9 @@ function deleteProduct(id) {
     if (confirm('Удалить товар?')) {
         products = products.filter(p => p.id !== id);
         saveToStorage();
+        broadcastProducts();
         showHome();
-        showNotification('✅ Товар удален', 'success');
+        showNotification('✅ Товар удален у всех!', 'success');
     }
 }
 
@@ -1030,6 +1142,7 @@ function addNewProduct() {
     const category = prompt('Категория (liquids/pods/disposable/accessories/snus/plates):') || 'liquids';
     const desc = prompt('Описание:') || '';
     const image = prompt('Эмодзи для фото:') || '📦';
+    const stock = parseInt(prompt('Количество на складе:', '10')) || 10;
 
     const newId = Math.max(...products.map(p => p.id), 0) + 1;
 
@@ -1040,13 +1153,14 @@ function addNewProduct() {
         category: category,
         image: image,
         desc: desc,
-        stock: true,
+        stock: stock,
         date: new Date().toISOString().split('T')[0]
     });
 
     saveToStorage();
+    broadcastProducts();
     showHome();
-    showNotification('✅ Товар добавлен', 'success');
+    showNotification('✅ Товар добавлен и отправлен всем!', 'success');
 }
 
 // ========== НАВИГАЦИЯ ==========
@@ -1069,11 +1183,9 @@ function navigateTo(page) {
 
 // ========== СОБЫТИЯ ==========
 
-// Обновление индикатора при скролле
 categoriesSlider?.addEventListener('scroll', updateIndicator);
 window.addEventListener('resize', updateIndicator);
 
-// Сортировка
 const sortHeader = document.querySelector('.sort-header');
 if (sortHeader) {
     sortHeader.addEventListener('click', () => {
@@ -1130,7 +1242,7 @@ if (searchIcon) {
 const banner = document.querySelector('.banner');
 if (banner) {
     banner.addEventListener('click', () => {
-        navigateTo('raffle');
+        showRaffle();
     });
 }
 
