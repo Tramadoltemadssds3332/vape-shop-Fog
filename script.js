@@ -4,46 +4,34 @@ tg.ready();
 
 console.log("✅ Fog Shop загружен");
 
-// ========== СИНХРОНИЗАЦИЯ С СЕРВЕРОМ ==========
-const SERVER_URL : string = 'https://TramadolTema.pythonanywhere.com:8080/webhook';
+// ========== СИНХРОНИЗАЦИЯ ==========
+const SERVER_URL = 'http://10.0.4.30:8080/products'; // ЗАМЕНИ НА СВОЙ IP
 
-async function syncWithServer() {
+async function loadFromServer() {
     try {
-        // Запрос товаров каждые 3 секунды
-        setInterval(async () => {
-            let response = await fetch(SERVER_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'get_products'})
-            });
-            let data = await response.json();
-            if (data.products && JSON.stringify(products) !== JSON.stringify(data.products)) {
-                products = data.products;
-                localStorage.setItem('products', JSON.stringify(products));
-                if (currentPage === 'home') showHome();
-                console.log("📦 Товары обновлены с сервера");
-            }
-        }, 3000);
-
-        // Перехват отправки заказов
-        const originalSend = tg.sendData;
-        tg.sendData = function(data) {
-            fetch(SERVER_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: data
-            });
-            originalSend.call(tg, data);
-        };
+        let res = await fetch(SERVER_URL);
+        let serverProducts = await res.json();
+        if (serverProducts.length > 0) {
+            products = serverProducts;
+            localStorage.setItem('products', JSON.stringify(products));
+            if (currentPage === 'home') showHome();
+        }
     } catch(e) {
-        console.log('Server sync error:', e);
+        console.log('Server error:', e);
     }
 }
 
-// ========== НАСТРОЙКИ ТЕМЫ ==========
-let darkMode = localStorage.getItem('darkMode') === 'true';
+async function saveToServer() {
+    if (!isAdmin()) return;
+    await fetch(SERVER_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(products)
+    });
+}
 
-// Данные пользователя
+// ========== ДАННЫЕ ==========
+let darkMode = localStorage.getItem('darkMode') === 'true';
 let user = {
     id: tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000),
     username: tg.initDataUnsafe?.user?.username || 'user_' + Math.floor(Math.random() * 1000),
@@ -52,7 +40,6 @@ let user = {
     orders: []
 };
 
-// Админы
 const MAIN_ADMIN_ID = 1439146971;
 let admins = [MAIN_ADMIN_ID];
 
@@ -60,74 +47,25 @@ function isAdmin() {
     return admins.includes(user.id);
 }
 
-// ========== ТОВАРЫ ==========
 let products = [];
-
-// Загружаем товары из localStorage
-const savedProducts = localStorage.getItem('products');
-if (savedProducts) {
-    products = JSON.parse(savedProducts);
-} else {
-    // Товары по умолчанию
-    products = [
-        {id: 1, name: "HS Bank 100ml", price: 890, category: "liquids", image: "🥤", desc: "Фруктовый микс", stock: 15, date: "2024-01-01"},
-        {id: 2, name: "Sadboy 60ml", price: 690, category: "liquids", image: "🍓", desc: "Клубничный джем", stock: 8, date: "2024-01-02"},
-        {id: 3, name: "Pod System X", price: 2490, category: "pods", image: "💨", desc: "Компактная pod-система", stock: 5, date: "2024-01-03"},
-        {id: 4, name: "Elf Bar 1500", price: 1290, category: "disposable", image: "⚡", desc: "1500 затяжек", stock: 12, date: "2024-01-04"},
-        {id: 5, name: "GeekVape Hero", price: 3300, category: "pods", image: "🦸", desc: "Влагозащита IP68", stock: 3, date: "2024-01-05"},
-        {id: 6, name: "Шейкер-брелок", price: 500, category: "accessories", image: "🔑", desc: "Для жидкости Pink", stock: 7, date: "2024-01-06"},
-        {id: 7, name: "Siberia White Dry", price: 550, category: "snus", image: "❄️", desc: "Крепкий снюс", stock: 6, date: "2024-01-07"},
-        {id: 8, name: "White Fox", price: 530, category: "plates", image: "🦊", desc: "Никотиновые пластинки", stock: 5, date: "2024-01-08"}
-    ];
-}
-
 let cart = [];
 let favorites = [];
 let currentCategory = 'all';
 let currentSort = 'default';
 let appliedPromo = null;
 let currentPage = 'home';
-let searchQuery = '';
 let workHours = '10:00 - 22:00';
-let lastProductUpdate = Date.now();
 
-// ========== СИНХРОНИЗАЦИЯ ==========
-function startInstantSync() {
-    setInterval(() => {
-        console.log("🔄 Проверка обновлений...");
-        tg.sendData(JSON.stringify({
-            action: 'get_products',
-            timestamp: lastProductUpdate
-        }));
-    }, 3000);
-}
-
-function syncProducts() {
-    tg.sendData(JSON.stringify({
-        action: 'get_products',
-        timestamp: lastProductUpdate
-    }));
-}
-
-function broadcastProducts() {
-    if (!isAdmin()) return;
-    lastProductUpdate = Date.now();
-    let data = JSON.stringify({
-        action: 'update_products',
-        products: products,
-        timestamp: lastProductUpdate
-    });
-
-    // Отправляем через Telegram и через сервер
-    tg.sendData(data);
-    fetch(SERVER_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: data
-    });
-
-    localStorage.setItem('products', JSON.stringify(products));
-    showNotification('✅ Товары отправлены всем!', 'success');
+// ========== ЗАГРУЗКА ==========
+const savedProducts = localStorage.getItem('products');
+if (savedProducts) {
+    products = JSON.parse(savedProducts);
+} else {
+    products = [
+        {id: 1, name: "HS Bank 100ml", price: 890, category: "liquids", image: "🥤", desc: "Фруктовый микс", stock: 15, date: "2024-01-01"},
+        {id: 2, name: "Sadboy 60ml", price: 690, category: "liquids", image: "🍓", desc: "Клубничный джем", stock: 8, date: "2024-01-02"},
+        {id: 3, name: "Elf Bar 1500", price: 1290, category: "disposable", image: "⚡", desc: "1500 затяжек", stock: 12, date: "2024-01-04"}
+    ];
 }
 
 // ========== ФУНКЦИИ ==========
@@ -188,22 +126,17 @@ function performSearch() {
         html += `
             <div class="product-card" onclick="showProductDetails(${product.id})">
                 <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="event.stopPropagation(); ${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
-                    ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
+                    ${product.image.startsWith('data:') ? `<img src="${product.image}">` : product.image}
                 </div>
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
-                <div class="stock-indicator">✅ В наличии: ${product.stock}</div>
+                <div class="stock-indicator">✅ ${product.stock}</div>
                 <div style="display: flex; gap: 5px;" onclick="event.stopPropagation()">
-                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>🛒 В корзину</button>
+                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">🛒 В корзину</button>
                     <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#FF6B6B' : 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)'}" onclick="toggleFavorite(${product.id})">
                         ${inFav ? '❤️' : '🤍'}
                     </button>
                 </div>
-                ${isAdmin() ? `
-                <div class="admin-controls" onclick="event.stopPropagation()">
-                    <button class="admin-btn edit-btn" onclick="quickEditProduct(${product.id})">✏️ Ред.</button>
-                    <button class="admin-btn delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
-                </div>` : ''}
             </div>
         `;
     });
@@ -211,7 +144,7 @@ function performSearch() {
     resultsDiv.innerHTML = html;
 }
 
-// ========== ДЕТАЛЬНАЯ СТРАНИЦА ==========
+// ========== ДЕТАЛЬНАЯ ==========
 function showProductDetails(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -221,19 +154,18 @@ function showProductDetails(productId) {
         <div class="product-details-page">
             <button class="back-button" onclick="showHome()"><i class="fas fa-arrow-left"></i> Назад</button>
             <div class="product-details-card">
-                <div class="product-details-image" onclick="${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
-                    ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:20px;">` : `<div class="product-emoji">${product.image}</div>`}
+                <div class="product-details-image">
+                    <div class="product-emoji">${product.image}</div>
                 </div>
                 <h2 class="product-details-title">${product.name}</h2>
                 <div class="product-details-price">${product.price} ₽</div>
-                <div class="product-details-stock in-stock">✅ В наличии: ${product.stock} шт</div>
+                <div class="product-details-stock">✅ В наличии: ${product.stock} шт</div>
                 <div class="product-details-desc"><h3>Описание</h3><p>${product.desc}</p></div>
-                <div class="product-details-category"><span class="category-tag ${product.category}">${getCategoryName(product.category)}</span></div>
+                <div class="product-details-category"><span class="category-tag">${getCategoryName(product.category)}</span></div>
                 <div class="product-details-actions">
-                    <button class="add-to-cart-btn" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>🛒 Добавить в корзину</button>
-                    <button class="favorite-btn ${inFav ? 'active' : ''}" onclick="toggleFavorite(${product.id})">${inFav ? '❤️ В избранном' : '🤍 В избранное'}</button>
+                    <button class="add-to-cart-btn" onclick="addToCart(${product.id})">🛒 Добавить</button>
+                    <button class="favorite-btn ${inFav ? 'active' : ''}" onclick="toggleFavorite(${product.id})">${inFav ? '❤️' : '🤍'}</button>
                 </div>
-                ${isAdmin() ? `<div style="display: flex; gap: 10px; margin-top: 20px;"><button class="admin-btn edit-btn" style="flex:1;" onclick="quickEditProduct(${product.id})">✏️ Быстрое редактирование</button></div>` : ''}
             </div>
         </div>
     `;
@@ -247,7 +179,7 @@ function getCategoryName(category) {
     return categories[category] || category;
 }
 
-// ========== БЫСТРОЕ РЕДАКТИРОВАНИЕ ==========
+// ========== АДМИНКА ==========
 function quickEditProduct(productId) {
     if (!isAdmin()) return;
     const product = products.find(p => p.id === productId);
@@ -259,30 +191,40 @@ function quickEditProduct(productId) {
     if (newStock) product.stock = parseInt(newStock);
     const newDesc = prompt('Описание:', product.desc);
     if (newDesc) product.desc = newDesc;
-    const newEmoji = prompt('Эмодзи:', product.image);
-    if (newEmoji) product.image = newEmoji;
-    broadcastProducts();
+    saveToStorage();
+    saveToServer();
     showHome();
-    showNotification('✅ Товар обновлен!', 'success');
+    showNotification('✅ Товар обновлен!');
 }
 
-function uploadProductImage(productId) {
+function deleteProduct(id) {
     if (!isAdmin()) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const product = products.find(p => p.id === productId);
-            product.image = event.target.result;
-            broadcastProducts();
-            showNotification('✅ Фото загружено!', 'success');
-        };
-        reader.readAsDataURL(file);
-    };
-    input.click();
+    if (confirm('Удалить товар?')) {
+        products = products.filter(p => p.id !== id);
+        saveToStorage();
+        saveToServer();
+        showHome();
+        showNotification('✅ Товар удален!');
+    }
+}
+
+function addNewProduct() {
+    if (!isAdmin()) return;
+    const name = prompt('Название:');
+    if (!name) return;
+    const price = parseInt(prompt('Цена:'));
+    const stock = parseInt(prompt('Количество:', '10'));
+    const desc = prompt('Описание:') || '';
+    const category = prompt('Категория (liquids/pods/disposable/accessories/snus/plates):') || 'liquids';
+    const newId = Math.max(...products.map(p => p.id), 0) + 1;
+    products.push({
+        id: newId, name, price, stock, desc, category,
+        image: '📦', date: new Date().toISOString().split('T')[0]
+    });
+    saveToStorage();
+    saveToServer();
+    showHome();
+    showNotification('✅ Товар добавлен!');
 }
 
 // ========== ГЛАВНАЯ ==========
@@ -302,13 +244,13 @@ function showHome() {
         html += `
             <div class="product-card" onclick="showProductDetails(${product.id})">
                 <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="event.stopPropagation(); ${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
-                    ${product.image.startsWith('data:') ? `<img src="${product.image}" style="width:100%; height:100%; object-fit:cover; border-radius:15px;">` : product.image}
+                    ${product.image}
                 </div>
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
                 <div class="stock-indicator">✅ ${product.stock}</div>
                 <div style="display: flex; gap: 5px;" onclick="event.stopPropagation()">
-                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>🛒 В корзину</button>
+                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">🛒 В корзину</button>
                     <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#FF6B6B' : 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)'}" onclick="toggleFavorite(${product.id})">
                         ${inFav ? '❤️' : '🤍'}
                     </button>
@@ -325,78 +267,13 @@ function showHome() {
     content.innerHTML = html;
 }
 
-function deleteProduct(id) {
-    if (!isAdmin()) return;
-    if (confirm('Удалить товар?')) {
-        products = products.filter(p => p.id !== id);
-        broadcastProducts();
-        showHome();
-        showNotification('✅ Товар удален!', 'success');
-    }
-}
-
-function addNewProduct() {
-    if (!isAdmin()) return;
-    const name = prompt('Название:');
-    if (!name) return;
-    const price = parseInt(prompt('Цена:'));
-    const stock = parseInt(prompt('Количество:', '10'));
-    const desc = prompt('Описание:') || '';
-    const category = prompt('Категория (liquids/pods/disposable/accessories/snus/plates):') || 'liquids';
-    const newId = Math.max(...products.map(p => p.id), 0) + 1;
-    products.push({
-        id: newId, name, price, stock, desc, category,
-        image: '📦', date: new Date().toISOString().split('T')[0]
-    });
-    broadcastProducts();
-    showHome();
-    showNotification('✅ Товар добавлен!', 'success');
-}
-
-// ========== ИЗБРАННОЕ ==========
-function showFavorites() {
-    currentPage = 'favorites';
-    toggleFilters(false);
-    const content = document.getElementById('main-content');
-    if (favorites.length === 0) {
-        content.innerHTML = `<div class="empty-state"><i class="fas fa-heart"></i><h3>В избранном пусто</h3><p>Добавляйте товары в избранное</p><button onclick="navigateTo('home')">Вернуться к покупкам</button></div>`;
-        return;
-    }
-    let html = '<div class="products-grid">';
-    favorites.forEach(product => {
-        html += `
-            <div class="product-card" onclick="showProductDetails(${product.id})">
-                <div class="product-image">${product.image.startsWith('data:') ? `<img src="${product.image}">` : product.image}</div>
-                <div class="product-title">${product.name}</div>
-                <div class="product-price">${product.price} ₽</div>
-                <button class="add-to-cart" onclick="addToCart(${product.id})">🛒 В корзину</button>
-            </div>
-        `;
-    });
-    html += '</div>';
-    content.innerHTML = html;
-}
-
-function toggleFavorite(productId) {
-    const product = products.find(p => p.id === productId);
-    const index = favorites.findIndex(f => f.id === productId);
-    if (index === -1) {
-        favorites.push({...product});
-        showNotification('❤️ Добавлено в избранное');
-    } else {
-        favorites.splice(index, 1);
-        showNotification('💔 Удалено из избранного');
-    }
-    if (currentPage === 'favorites') showFavorites();
-}
-
 // ========== КОРЗИНА ==========
 function showCart() {
     currentPage = 'cart';
     toggleFilters(false);
     const content = document.getElementById('main-content');
     if (cart.length === 0) {
-        content.innerHTML = `<div class="empty-state"><i class="fas fa-shopping-cart"></i><h3>В корзине пусто</h3><p>Добавьте товары из каталога</p><button onclick="navigateTo('home')">Вернуться к покупкам</button></div>`;
+        content.innerHTML = `<div class="empty-state"><i class="fas fa-shopping-cart"></i><h3>В корзине пусто</h3><button onclick="navigateTo('home')">Вернуться</button></div>`;
         return;
     }
     const grouped = {};
@@ -418,16 +295,11 @@ function showCart() {
             </div>
         `;
     });
-    const discount = appliedPromo ? subtotal * 0.05 : 0;
-    const total = subtotal - discount;
+    const total = subtotal - (appliedPromo ? subtotal * 0.05 : 0);
     html += `
-        <div class="promo-section"><input type="text" id="promoInput" placeholder="Промокод" value="${appliedPromo || ''}"><button onclick="applyPromo()">Применить</button></div>
-        <div class="cart-summary">
-            <div class="summary-row"><span>Товары (${cart.length})</span><span>${subtotal} ₽</span></div>
-            ${appliedPromo ? `<div class="summary-row"><span>Скидка 5%</span><span>-${discount} ₽</span></div>` : ''}
-            <div class="summary-row total"><span>Итого</span><span>${total} ₽</span></div>
-        </div>
-        <button class="checkout-btn" onclick="checkout()">Перейти к оформлению · ${total} ₽</button>
+        <div class="promo-section"><input type="text" id="promoInput" placeholder="Промокод"><button onclick="applyPromo()">Применить</button></div>
+        <div class="cart-summary"><div class="summary-row total"><span>Итого</span><span>${total} ₽</span></div></div>
+        <button class="checkout-btn" onclick="checkout()">Оформить · ${total} ₽</button>
     </div>`;
     content.innerHTML = html;
 }
@@ -436,7 +308,7 @@ function addToCart(productId) {
     const product = products.find(p => p.id === productId);
     cart.push({...product});
     updateCartBadge();
-    showNotification(`${product.name} добавлен в корзину`, 'success');
+    showNotification(`${product.name} добавлен`);
 }
 
 function updateCartItem(productId, delta) {
@@ -463,10 +335,9 @@ function updateCartBadge() {
 }
 
 function applyPromo() {
-    const input = document.getElementById('promoInput');
-    const code = input.value.trim();
+    const code = document.getElementById('promoInput').value;
     if (code === user.promoCode) {
-        showNotification('❌ Нельзя свой промокод', 'error');
+        showNotification('❌ Нельзя свой промокод');
         return;
     }
     appliedPromo = code || null;
@@ -478,18 +349,16 @@ function showProfile() {
     currentPage = 'profile';
     toggleFilters(false);
     const content = document.getElementById('main-content');
-    let ordersHtml = user.orders.length === 0 ? '<p style="text-align:center; color:#888; padding:20px;">Нет заказов</p>' :
-        user.orders.map(o => `<div class="order-item"><div class="order-header"><span>Заказ #${o.id}</span><span>${o.date}</span></div><div>${o.items} товаров · ${o.total} ₽</div><div class="order-status">${o.status || 'Новый'}</div></div>`).join('');
-
+    let ordersHtml = user.orders.length === 0 ? '<p>Нет заказов</p>' : '';
     content.innerHTML = `
         <div class="profile-page">
             <div class="profile-header">
                 <div class="profile-avatar">${user.firstName.charAt(0)}</div>
-                <div><h3>${user.firstName}</h3><p>@${user.username}</p><p>Заказов: ${user.orders.length}</p></div>
+                <div><h3>${user.firstName}</h3><p>@${user.username}</p></div>
             </div>
-            <div class="promo-card"><div>🎁 Ваш промокод</div><div class="promo-code">${user.promoCode}</div><div style="font-size:12px; opacity:0.9;">Дайте другу — скидка 5%</div></div>
-            <div class="history-section"><h3>📜 История заказов</h3>${ordersHtml}</div>
-            ${isAdmin() ? `<button class="checkout-btn" style="margin-top:20px;" onclick="addNewProduct()">➕ Добавить товар</button>` : ''}
+            <div class="promo-card"><div>Ваш промокод</div><div class="promo-code">${user.promoCode}</div></div>
+            <div class="history-section"><h3>История заказов</h3>${ordersHtml}</div>
+            ${isAdmin() ? `<button class="checkout-btn" onclick="addNewProduct()">➕ Добавить товар</button>` : ''}
         </div>
     `;
 }
@@ -499,66 +368,9 @@ function showRaffle() {
     tg.openTelegramLink('https://t.me/c/3867496075/42');
 }
 
-// ========== ОФОРМЛЕНИЕ ЗАКАЗА ==========
+// ========== ЗАКАЗ ==========
 function checkout() {
-    const modal = document.getElementById('orderModal');
-    modal.classList.add('show');
-    if (!document.getElementById('deliveryFields')) addDeliveryFields();
-}
-
-function addDeliveryFields() {
-    const workHoursDiv = document.querySelector('.work-hours-info');
-    const deliveryHtml = `
-        <div id="deliveryFields" class="delivery-fields">
-            <div class="delivery-section">
-                <h4>📍 Место встречи</h4>
-                <div class="place-selector">
-                    <label class="place-option"><input type="radio" name="deliveryPlace" value="Северный вокзал" checked><span>🚂 Северный вокзал</span></label>
-                    <label class="place-option"><input type="radio" name="deliveryPlace" value="ТРЦ Европа"><span>🛍️ ТРЦ Европа</span></label>
-                </div>
-            </div>
-            <div class="delivery-section">
-                <h4>📅 Дата доставки</h4>
-                <select id="deliveryDate" class="delivery-select"><option value="">-- Выберите дату --</option>${generateDateOptions()}</select>
-                <p class="delivery-note">⚠️ Доставка на следующий день</p>
-            </div>
-            <div class="delivery-section">
-                <h4>⏰ Время</h4>
-                <select id="deliveryTime" class="delivery-select"><option value="">-- Выберите время --</option>${generateTimeOptions(workHours)}</select>
-            </div>
-        </div>
-    `;
-    workHoursDiv.insertAdjacentHTML('afterend', deliveryHtml);
-}
-
-function generateDateOptions() {
-    let options = '';
-    const today = new Date();
-    for (let i = 1; i <= 14; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const year = date.getFullYear();
-        const weekdays = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-        const weekday = weekdays[date.getDay()];
-        options += `<option value="${day}.${month}.${year}">${weekday}, ${day}.${month}.${year}</option>`;
-    }
-    return options;
-}
-
-function generateTimeOptions(workHoursStr) {
-    try {
-        const [start, end] = workHoursStr.split('-').map(t => parseInt(t.trim()));
-        let options = '';
-        for (let hour = start; hour <= end; hour++) {
-            options += `<option value="${hour}:00">${hour}:00</option>`;
-            if (hour < end) options += `<option value="${hour}:30">${hour}:30</option>`;
-        }
-        return options;
-    } catch {
-        return '<option value="">Ошибка</option>';
-    }
+    document.getElementById('orderModal').classList.add('show');
 }
 
 function closeModal() {
@@ -568,67 +380,38 @@ function closeModal() {
 function completeOrder() {
     const name = document.getElementById('orderName').value.trim();
     if (!name) {
-        showNotification('❌ Введите имя', 'error');
+        showNotification('❌ Введите имя');
         return;
     }
 
-    const subtotal = cart.reduce((sum, i) => sum + i.price, 0);
-    const discount = appliedPromo ? subtotal * 0.05 : 0;
-    const total = subtotal - discount;
-
-    const grouped = {};
-    cart.forEach(i => {
-        if (!grouped[i.id]) grouped[i.id] = {...i, count: 0};
-        grouped[i.id].count++;
-    });
-
-    let itemsList = '';
-    Object.values(grouped).forEach(i => itemsList += `• ${i.name} x${i.count} — ${i.price * i.count}₽\n`);
-
-    const placeRadios = document.getElementsByName('deliveryPlace');
-    let deliveryPlace = 'Не выбрано';
-    for (const r of placeRadios) if (r.checked) deliveryPlace = r.value;
-
-    const deliveryDate = document.getElementById('deliveryDate')?.value || 'Не выбрано';
-    const deliveryTime = document.getElementById('deliveryTime')?.value || 'Не выбрано';
-
+    const total = cart.reduce((sum, i) => sum + i.price, 0);
     const order = {
         id: Date.now(),
         date: new Date().toLocaleString('ru-RU'),
         items: cart.length,
         total: total,
         name: name,
-        comment: document.getElementById('orderComment').value,
-        deliveryPlace, deliveryDate, deliveryTime,
-        promo: appliedPromo
+        comment: document.getElementById('orderComment').value
     };
 
     user.orders.push(order);
+    const orderText = `🆕 ЗАКАЗ\n👤 @${user.username}\n📦 ${cart.length} товаров\n💰 ${total} ₽`;
 
-    const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 @${user.username} (${name})\n\n📦 ${itemsList}\n💰 ${total} ₽\n📍 ${deliveryPlace}\n📅 ${deliveryDate}\n⏰ ${deliveryTime}\n📝 ${order.comment || '—'}\n🕐 ${order.date}`;
-
-    // Отправляем через Telegram и через сервер
     tg.sendData(JSON.stringify({action: 'new_order', text: orderText}));
-    fetch(SERVER_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'new_order', text: orderText})
-    });
 
     cart = [];
-    appliedPromo = null;
     updateCartBadge();
     closeModal();
     showNotification('✅ Заказ отправлен!');
     showHome();
 }
 
-function showNotification(text, type) {
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = text;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 2000);
+function showNotification(text) {
+    const n = document.createElement('div');
+    n.className = 'notification';
+    n.textContent = text;
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 2000);
 }
 
 function toggleFilters(show) {
@@ -656,7 +439,7 @@ function navigateTo(page) {
     });
 }
 
-// ========== БОКОВОЕ МЕНЮ ==========
+// ========== МЕНЮ ==========
 const menuButton = document.getElementById('menuButton');
 const sideMenu = document.getElementById('sideMenu');
 const closeMenu = document.getElementById('closeMenu');
@@ -681,34 +464,20 @@ function updateSideMenu() {
     const menuItems = document.querySelector('.side-menu-items');
     if (!menuItems) return;
     const themeIcon = darkMode ? 'fa-sun' : 'fa-moon';
-    const themeText = darkMode ? 'Светлая тема' : 'Темная тема';
+    const themeText = darkMode ? 'Светлая' : 'Темная';
     menuItems.innerHTML = `
         <a href="https://t.me/+ydkHgm09g5hhOTMy" target="_blank" class="side-menu-item"><i class="fab fa-telegram"></i><span>Наш канал</span><i class="fas fa-external-link-alt external-icon"></i></a>
-        <div class="side-menu-item" onclick="toggleTheme()"><i class="fas ${themeIcon}"></i><span>${themeText}</span></div>
-        <div class="side-menu-item" onclick="showNotification('ℹ️ О нас')"><i class="fas fa-info-circle"></i><span>О нас</span></div>
-        <div class="side-menu-item" onclick="showNotification('❓ Помощь')"><i class="fas fa-question-circle"></i><span>Помощь</span></div>
+        <div class="side-menu-item" onclick="toggleTheme()"><i class="fas ${themeIcon}"></i><span>${themeText} тема</span></div>
     `;
-}
-
-// ========== ПОДВИЖНАЯ ЛИНИЯ ==========
-const categoriesSlider = document.getElementById('categoriesSlider');
-const indicator = document.getElementById('sliderIndicator');
-
-function updateIndicator() {
-    const active = document.querySelector('.category.active');
-    if (!active || !indicator) return;
-    indicator.style.left = active.offsetLeft + 'px';
-    indicator.style.width = active.offsetWidth + 'px';
 }
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 (function init() {
     applyTheme();
-    syncWithServer(); // ← СИНХРОНИЗАЦИЯ С СЕРВЕРОМ
-    startInstantSync();
     showHome();
-    setTimeout(updateIndicator, 100);
     updateSideMenu();
+    setInterval(loadFromServer, 3000);
+    loadFromServer();
     if (isAdmin()) document.getElementById('adminBtn').style.display = 'flex';
 
     const savedCart = localStorage.getItem(`cart_${user.id}`);
@@ -720,23 +489,25 @@ function updateIndicator() {
     updateCartBadge();
 })();
 
-// ========== СОБЫТИЯ ==========
-categoriesSlider?.addEventListener('scroll', updateIndicator);
-window.addEventListener('resize', updateIndicator);
+function saveToStorage() {
+    localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
+    localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
+    localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
+    localStorage.setItem('products', JSON.stringify(products));
+}
 
+// ========== СОБЫТИЯ ==========
 document.querySelectorAll('.category').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.category').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentCategory = btn.dataset.cat;
-        updateIndicator();
         showHome();
     });
 });
 
 document.querySelector('.sort-header')?.addEventListener('click', () => {
     document.querySelector('.sort-menu').classList.toggle('show');
-    document.querySelector('.sort-header').classList.toggle('active');
 });
 
 document.querySelectorAll('.sort-item').forEach(item => {
@@ -745,7 +516,6 @@ document.querySelectorAll('.sort-item').forEach(item => {
         item.classList.add('active');
         currentSort = item.dataset.sort;
         document.querySelector('.sort-menu').classList.remove('show');
-        document.querySelector('.sort-header').classList.remove('active');
         showHome();
     });
 });
@@ -756,5 +526,4 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 
 document.querySelector('.search-icon')?.addEventListener('click', () => navigateTo('search'));
 document.querySelector('.banner')?.addEventListener('click', () => navigateTo('raffle'));
-
 document.getElementById('adminBtn')?.addEventListener('click', () => isAdmin() && addNewProduct());

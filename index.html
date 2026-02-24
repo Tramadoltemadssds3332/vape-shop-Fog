@@ -10,7 +10,6 @@
 </head>
 <body>
     <div class="app">
-        <!-- Шапка с тремя полосками -->
         <header class="header">
             <div class="header-left">
                 <div class="menu-button" id="menuButton">
@@ -23,7 +22,6 @@
             </div>
         </header>
 
-        <!-- Боковое меню (выезжающее) -->
         <div class="side-menu" id="sideMenu">
             <div class="side-menu-header">
                 <div class="side-menu-close" id="closeMenu">
@@ -31,12 +29,9 @@
                 </div>
                 <div class="side-menu-logo">Fog Shop</div>
             </div>
-            <div class="side-menu-items">
-                <!-- Сюда будут добавляться пункты меню через JS -->
-            </div>
+            <div class="side-menu-items"></div>
         </div>
 
-        <!-- Подвижная линия категорий -->
         <div class="categories-wrapper">
             <div class="categories-slider" id="categoriesSlider">
                 <button class="category active" data-cat="all">Все</button>
@@ -50,7 +45,6 @@
             <div class="slider-indicator" id="sliderIndicator"></div>
         </div>
 
-        <!-- Сортировка -->
         <div class="sort-section">
             <div class="sort-header">
                 <span>Сортировать по</span>
@@ -64,7 +58,6 @@
             </div>
         </div>
 
-        <!-- Баннер с анимацией -->
         <div class="banner" onclick="navigateTo('raffle')">
             <div class="banner-content">
                 <span class="banner-tag">🎉 РОЗЫГРЫШ</span>
@@ -73,10 +66,8 @@
             </div>
         </div>
 
-        <!-- Основной контент -->
         <main id="main-content"></main>
 
-        <!-- Нижняя навигация -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-page="home">
                 <i class="fas fa-home"></i>
@@ -97,33 +88,26 @@
             </button>
         </nav>
 
-        <!-- Кнопка админки -->
         <div class="admin-button" id="adminBtn" style="display: none;">
             <i class="fas fa-cog"></i>
         </div>
 
-        <!-- Модалка заказа -->
         <div class="modal" id="orderModal">
             <div class="modal-content">
                 <h3>Контактная информация</h3>
-
                 <div class="form-group">
                     <label>Ваши данные</label>
                     <input type="text" id="orderName" placeholder="Имя">
                 </div>
-
-                <!-- Блок с рабочим временем -->
                 <div class="work-hours-info" id="workHoursInfo">
                     <i class="far fa-clock"></i>
                     <span>Время работы: <strong id="workHoursText">10:00 - 22:00</strong></span>
                 </div>
-
                 <div class="form-group">
                     <label>Примечание к заказу</label>
                     <textarea id="orderComment" placeholder="Комментарии к заказу"></textarea>
                     <small>Мы передадим эту информацию продавцу</small>
                 </div>
-
                 <div class="modal-buttons">
                     <button class="modal-btn cancel" onclick="closeModal()">Отмена</button>
                     <button class="modal-btn confirm" onclick="completeOrder()">Завершить заказ</button>
@@ -131,10 +115,8 @@
             </div>
         </div>
 
-        <!-- Затемнение фона для меню -->
         <div class="overlay" id="overlay"></div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
