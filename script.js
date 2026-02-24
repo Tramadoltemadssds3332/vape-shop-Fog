@@ -5,7 +5,7 @@ tg.ready();
 console.log("✅ Fog Shop загружен");
 
 // ========== СИНХРОНИЗАЦИЯ С СЕРВЕРОМ ==========
-const SERVER_URL = 'https://TramadolTema.pythonanywhere.com/webhook';
+const SERVER_URL : string = 'https://TramadolTema.pythonanywhere.com:8080/webhook';
 
 async function syncWithServer() {
     try {
@@ -756,4 +756,5 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 
 document.querySelector('.search-icon')?.addEventListener('click', () => navigateTo('search'));
 document.querySelector('.banner')?.addEventListener('click', () => navigateTo('raffle'));
+
 document.getElementById('adminBtn')?.addEventListener('click', () => isAdmin() && addNewProduct());
