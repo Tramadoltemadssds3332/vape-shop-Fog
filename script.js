@@ -4,23 +4,41 @@ tg.ready();
 
 console.log("✅ Fog Shop загружен");
 
-// Слушаем сообщения от бота
-tg.onEvent('message', function(event) {
+// ========== СИНХРОНИЗАЦИЯ С СЕРВЕРОМ ==========
+const SERVER_URL = 'https://TramadolTema.pythonanywhere.com/webhook';
+
+async function syncWithServer() {
     try {
-        let data = JSON.parse(event.data);
-        if (data.action === 'sync_products') {
-            let newProducts = data.products;
-            if (JSON.stringify(products) !== JSON.stringify(newProducts)) {
-                products = newProducts;
+        // Запрос товаров каждые 3 секунды
+        setInterval(async () => {
+            let response = await fetch(SERVER_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'get_products'})
+            });
+            let data = await response.json();
+            if (data.products && JSON.stringify(products) !== JSON.stringify(data.products)) {
+                products = data.products;
                 localStorage.setItem('products', JSON.stringify(products));
-                showNotification('📦 Товары обновлены!', 'sync');
                 if (currentPage === 'home') showHome();
+                console.log("📦 Товары обновлены с сервера");
             }
-        }
+        }, 3000);
+
+        // Перехват отправки заказов
+        const originalSend = tg.sendData;
+        tg.sendData = function(data) {
+            fetch(SERVER_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: data
+            });
+            originalSend.call(tg, data);
+        };
     } catch(e) {
-        console.log('Не удалось распарсить сообщение от бота');
+        console.log('Server sync error:', e);
     }
-});
+}
 
 // ========== НАСТРОЙКИ ТЕМЫ ==========
 let darkMode = localStorage.getItem('darkMode') === 'true';
@@ -94,11 +112,20 @@ function syncProducts() {
 function broadcastProducts() {
     if (!isAdmin()) return;
     lastProductUpdate = Date.now();
-    tg.sendData(JSON.stringify({
+    let data = JSON.stringify({
         action: 'update_products',
         products: products,
         timestamp: lastProductUpdate
-    }));
+    });
+
+    // Отправляем через Telegram и через сервер
+    tg.sendData(data);
+    fetch(SERVER_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: data
+    });
+
     localStorage.setItem('products', JSON.stringify(products));
     showNotification('✅ Товары отправлены всем!', 'success');
 }
@@ -580,7 +607,13 @@ function completeOrder() {
 
     const orderText = `🆕 НОВЫЙ ЗАКАЗ!\n\n👤 @${user.username} (${name})\n\n📦 ${itemsList}\n💰 ${total} ₽\n📍 ${deliveryPlace}\n📅 ${deliveryDate}\n⏰ ${deliveryTime}\n📝 ${order.comment || '—'}\n🕐 ${order.date}`;
 
+    // Отправляем через Telegram и через сервер
     tg.sendData(JSON.stringify({action: 'new_order', text: orderText}));
+    fetch(SERVER_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'new_order', text: orderText})
+    });
 
     cart = [];
     appliedPromo = null;
@@ -671,6 +704,7 @@ function updateIndicator() {
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 (function init() {
     applyTheme();
+    syncWithServer(); // ← СИНХРОНИЗАЦИЯ С СЕРВЕРОМ
     startInstantSync();
     showHome();
     setTimeout(updateIndicator, 100);
