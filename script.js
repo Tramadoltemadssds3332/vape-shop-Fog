@@ -40,7 +40,12 @@ let currentCategory = 'all';
 let currentSort = 'default';
 let appliedPromo = null;
 let currentPage = 'home';
-let workHours = '10:00 - 22:00';
+
+// ========== РАБОЧЕЕ ВРЕМЯ (можно менять админом) ==========
+let workHours = {
+    start: 14, // 14:00
+    end: 20    // 20:00
+};
 
 // ========== СОСТОЯНИЕ ОФОРМЛЕНИЯ ==========
 let checkoutStep = 1;
@@ -341,9 +346,72 @@ function showProfile() {
                 ${ordersHtml}
             </div>
             
-            ${isAdmin() ? `<button class="checkout-btn" style="margin-top:20px;" onclick="addNewProduct()">➕ Добавить товар</button>` : ''}
+            ${isAdmin() ? `
+                <div style="margin-top:20px;">
+                    <button class="checkout-btn" onclick="showAdminWorkHours()">⚙️ Настройки времени</button>
+                </div>
+            ` : ''}
         </div>
     `;
+}
+
+// ========== АДМИНКА: НАСТРОЙКА ВРЕМЕНИ ==========
+function showAdminWorkHours() {
+    if (!isAdmin()) return;
+
+    const content = document.getElementById('main-content');
+    content.innerHTML = `
+        <div class="checkout-screen">
+            <button class="back-button" onclick="showProfile()">
+                <i class="fas fa-arrow-left"></i> Назад
+            </button>
+            
+            <h2 class="screen-title">⚙️ Настройка времени работы</h2>
+            
+            <div class="delivery-option">
+                <h4>Начало работы</h4>
+                <select id="workStart">
+                    ${generateHourOptions(workHours.start)}
+                </select>
+            </div>
+            
+            <div class="delivery-option">
+                <h4>Конец работы</h4>
+                <select id="workEnd">
+                    ${generateHourOptions(workHours.end)}
+                </select>
+            </div>
+            
+            <button class="continue-btn" onclick="saveWorkHours()">
+                Сохранить настройки
+            </button>
+        </div>
+    `;
+}
+
+function generateHourOptions(selected) {
+    let options = '';
+    for (let hour = 0; hour <= 23; hour++) {
+        const selectedAttr = (hour === selected) ? 'selected' : '';
+        options += `<option value="${hour}" ${selectedAttr}>${hour.toString().padStart(2, '0')}:00</option>`;
+    }
+    return options;
+}
+
+function saveWorkHours() {
+    const start = parseInt(document.getElementById('workStart').value);
+    const end = parseInt(document.getElementById('workEnd').value);
+
+    if (start >= end) {
+        alert('Конец работы должен быть позже начала');
+        return;
+    }
+
+    workHours.start = start;
+    workHours.end = end;
+
+    alert('✅ Время работы сохранено');
+    showProfile();
 }
 
 // ========== РОЗЫГРЫШ ==========
@@ -397,6 +465,18 @@ function performSearch() {
     resultsDiv.innerHTML = html;
 }
 
+// ========== ГЕНЕРАЦИЯ ВРЕМЕНИ ДЛЯ ВЫПАДАЮЩЕГО СПИСКА ==========
+function generateTimeOptions() {
+    let options = '';
+    for (let hour = workHours.start; hour <= workHours.end; hour++) {
+        options += `<option value="${hour}:00">${hour.toString().padStart(2, '0')}:00</option>`;
+        if (hour < workHours.end) {
+            options += `<option value="${hour}:30">${hour.toString().padStart(2, '0')}:30</option>`;
+        }
+    }
+    return options;
+}
+
 // ========== ОФОРМЛЕНИЕ ЗАКАЗА С КАРТОЙ ==========
 function startCheckout() {
     checkoutStep = 1;
@@ -408,10 +488,14 @@ function showDeliveryMap() {
     const content = document.getElementById('main-content');
     content.innerHTML = `
         <div class="checkout-screen">
+            <button class="back-button" onclick="showCart()" style="margin-bottom:15px;">
+                <i class="fas fa-arrow-left"></i> Назад в корзину
+            </button>
+            
             <h2 class="screen-title">Где заберете заказ?</h2>
             
             <!-- Яндекс Карта -->
-            <div id="map" style="width:100%; height:350px; margin-bottom:20px; border-radius:12px; overflow:hidden;"></div>
+            <div id="map" style="width:100%; height:350px; margin-bottom:20px; border-radius:12px; overflow:hidden; border:1px solid #e0e0e0;"></div>
             
             <button class="continue-btn" id="mapContinueBtn" onclick="nextCheckoutStep()" disabled>
                 Выберите точку на карте
@@ -419,7 +503,7 @@ function showDeliveryMap() {
         </div>
     `;
 
-    // Загружаем Яндекс Карты с ТВОИМ КЛЮЧОМ
+    // Загружаем Яндекс Карты с API-ключом
     const script = document.createElement('script');
     script.src = "https://api-maps.yandex.ru/2.1/?apikey=d09bda33-f82a-4501-bfe6-84a386cf1f34&lang=ru_RU";
     script.onload = initMap;
@@ -430,17 +514,18 @@ function initMap() {
     if (!window.ymaps) return;
 
     ymaps.ready(() => {
+        // Центрируем карту между двумя точками в Калининграде
         const map = new ymaps.Map("map", {
-            center: [54.746, 55.988], // Координаты Калининграда
-            zoom: 12
+            center: [54.7205, 20.5003],
+            zoom: 16
         });
 
-        // Точка 1: ул. Театральная, 30
+        // Точка 1: Северный вокзал
         const place1 = new ymaps.Placemark(
-            [54.746, 55.988],
+            [54.722716, 20.499544],
             {
-                balloonContent: 'ул. Театральная, 30',
-                hintContent: 'ул. Театральная, 30'
+                balloonContent: 'Северный вокзал, ул. Театральная, 30',
+                hintContent: '🚂 Северный вокзал'
             },
             {
                 preset: 'islands#redDotIcon',
@@ -448,12 +533,12 @@ function initMap() {
             }
         );
 
-        // Точка 2: Советский проспект, 8
+        // Точка 2: ТРЦ Европа
         const place2 = new ymaps.Placemark(
-            [54.756, 55.978],
+            [54.718551, 20.501129],
             {
-                balloonContent: 'Советский проспект, 8',
-                hintContent: 'Советский проспект, 8'
+                balloonContent: 'ТРЦ Европа, Советский проспект, 8',
+                hintContent: '🛍️ ТРЦ Европа'
             },
             {
                 preset: 'islands#redDotIcon',
@@ -461,21 +546,19 @@ function initMap() {
             }
         );
 
-        // Добавляем точки на карту
         map.geoObjects.add(place1);
         map.geoObjects.add(place2);
 
-        // Обработчики кликов
         place1.events.add('click', () => {
-            deliveryState.place = 'ул. Театральная, 30';
+            deliveryState.place = 'ул. Театральная, 30 (Северный вокзал)';
             document.getElementById('mapContinueBtn').disabled = false;
-            document.getElementById('mapContinueBtn').innerText = 'Продолжить';
+            document.getElementById('mapContinueBtn').innerText = 'Продолжить (Северный вокзал)';
         });
 
         place2.events.add('click', () => {
-            deliveryState.place = 'Советский проспект, 8';
+            deliveryState.place = 'Советский проспект, 8 (ТРЦ Европа)';
             document.getElementById('mapContinueBtn').disabled = false;
-            document.getElementById('mapContinueBtn').innerText = 'Продолжить';
+            document.getElementById('mapContinueBtn').innerText = 'Продолжить (ТРЦ Европа)';
         });
     });
 }
@@ -501,23 +584,22 @@ function showDateTimeSelection() {
     const content = document.getElementById('main-content');
     content.innerHTML = `
         <div class="checkout-screen">
+            <button class="back-button" onclick="showDeliveryMap()" style="margin-bottom:15px;">
+                <i class="fas fa-arrow-left"></i> Назад к карте
+            </button>
+            
             <h2 class="screen-title">Когда удобно?</h2>
             
             <div class="delivery-option">
                 <h4>📅 Дата доставки</h4>
                 <input type="date" id="deliveryDate" min="${tomorrow}" value="${tomorrow}">
-                <p class="delivery-note">⚠️ Доставка на следующий день</p>
+                <p class="delivery-note">⚠️ Заказы доставляются на следующий день</p>
             </div>
             
             <div class="delivery-option">
-                <h4>⏰ Время</h4>
+                <h4>⏰ Время (${workHours.start}:00 - ${workHours.end}:00)</h4>
                 <select id="deliveryTime">
-                    <option>10:00</option>
-                    <option>12:00</option>
-                    <option>14:00</option>
-                    <option>16:00</option>
-                    <option>18:00</option>
-                    <option>20:00</option>
+                    ${generateTimeOptions()}
                 </select>
             </div>
             
@@ -530,6 +612,10 @@ function showPaymentSelection() {
     const content = document.getElementById('main-content');
     content.innerHTML = `
         <div class="checkout-screen">
+            <button class="back-button" onclick="showDateTimeSelection()" style="margin-bottom:15px;">
+                <i class="fas fa-arrow-left"></i> Назад к дате
+            </button>
+            
             <h2 class="screen-title">Как оплатите?</h2>
             
             <div class="delivery-option" onclick="selectPayment('Наличные')" style="cursor:pointer;">
