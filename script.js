@@ -4,7 +4,7 @@ tg.ready();
 
 console.log("✅ Fog Shop загружен");
 
-// ========== ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ИЗ TELEGRAM ==========
+// ========== ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ==========
 let user = {
     id: tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000),
     username: tg.initDataUnsafe?.user?.username || 'user_' + Math.floor(Math.random() * 1000),
@@ -13,9 +13,6 @@ let user = {
     promoCode: generatePromoCode(),
     orders: []
 };
-
-// ========== НАСТРОЙКИ ТЕМЫ ==========
-let darkMode = localStorage.getItem('darkMode') === 'true';
 
 // ========== АДМИНЫ ==========
 const MAIN_ADMIN_ID = 1439146971;
@@ -64,8 +61,8 @@ function generatePromoCode() {
     return code;
 }
 
-// ========== СИНХРОНИЗАЦИЯ С СЕРВЕРОМ ==========
-const SERVER_URL = 'http://10.0.4.30:8080/products'; // ЗАМЕНИ НА СВОЙ IP
+// ========== СИНХРОНИЗАЦИЯ ==========
+const SERVER_URL = 'http://10.0.4.30:8080/products';
 
 async function loadFromServer() {
     try {
@@ -88,109 +85,6 @@ async function saveToServer() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(products)
     });
-}
-
-// ========== ТЕМА ==========
-function toggleTheme() {
-    darkMode = !darkMode;
-    localStorage.setItem('darkMode', darkMode);
-    applyTheme();
-}
-
-function applyTheme() {
-    if (darkMode) {
-        document.body.classList.add('dark-mode');
-    } else {
-        document.body.classList.remove('dark-mode');
-    }
-}
-
-// ========== ПОИСК ==========
-function showSearch() {
-    currentPage = 'search';
-    toggleFilters(false);
-    const content = document.getElementById('main-content');
-    content.innerHTML = `
-        <div class="search-page">
-            <div class="search-header">
-                <input type="text" id="searchInput" placeholder="🔍 Поиск товаров..." autofocus>
-                <button onclick="performSearch()" class="search-button">Найти</button>
-            </div>
-            <div id="searchResults" class="search-results"></div>
-        </div>
-    `;
-    document.getElementById('searchInput').addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') performSearch();
-    });
-}
-
-function performSearch() {
-    const query = document.getElementById('searchInput')?.value.toLowerCase().trim();
-    if (!query) return;
-    const results = products.filter(p =>
-        p.name.toLowerCase().includes(query) ||
-        p.desc.toLowerCase().includes(query)
-    );
-    const resultsDiv = document.getElementById('searchResults');
-    if (results.length === 0) {
-        resultsDiv.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><h3>Ничего не найдено</h3><p>Попробуйте изменить запрос</p></div>`;
-        return;
-    }
-    let html = '<div class="products-grid">';
-    results.forEach(product => {
-        const inFav = favorites.some(f => f.id === product.id);
-        html += `
-            <div class="product-card" onclick="showProductDetails(${product.id})">
-                <div class="product-image">${product.image}</div>
-                <div class="product-title">${product.name}</div>
-                <div class="product-price">${product.price} ₽</div>
-                <div class="stock-indicator in-stock">✅ ${product.stock}</div>
-                <div style="display: flex; gap: 5px;" onclick="event.stopPropagation()">
-                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">🛒 В корзину</button>
-                    <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#ff6b6b' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}" onclick="toggleFavorite(${product.id})">
-                        ${inFav ? '❤️' : '🤍'}
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-    html += '</div>';
-    resultsDiv.innerHTML = html;
-}
-
-// ========== ДЕТАЛЬНАЯ СТРАНИЦА ТОВАРА ==========
-function showProductDetails(productId) {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-    const inFav = favorites.some(f => f.id === product.id);
-    const content = document.getElementById('main-content');
-    content.innerHTML = `
-        <div class="product-details-page" style="padding:15px;">
-            <button class="back-button" onclick="showHome()" style="background:none; border:none; color:#667eea; font-size:16px; margin-bottom:15px;">
-                <i class="fas fa-arrow-left"></i> Назад
-            </button>
-            <div style="background:white; border-radius:20px; padding:20px; border:1px solid #f0f0f0;">
-                <div style="width:100%; height:250px; background:#f5f5f7; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:80px; margin-bottom:20px;">
-                    ${product.image}
-                </div>
-                <h2 style="font-size:24px; margin-bottom:10px;">${product.name}</h2>
-                <div style="font-size:32px; color:#667eea; font-weight:700; margin-bottom:15px;">${product.price} ₽</div>
-                <div style="background:#f0f3ff; padding:12px; border-radius:15px; margin-bottom:20px; color:#4ECDC4;">
-                    ✅ В наличии: ${product.stock} шт
-                </div>
-                <div style="margin-bottom:20px;">
-                    <h3 style="margin-bottom:10px;">Описание</h3>
-                    <p style="color:#666; line-height:1.6;">${product.desc}</p>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="add-to-cart" style="flex:2;" onclick="addToCart(${product.id})">🛒 Добавить в корзину</button>
-                    <button class="add-to-cart" style="flex:1; background:${inFav ? '#ff6b6b' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}" onclick="toggleFavorite(${product.id})">
-                        ${inFav ? '❤️' : '🤍'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
 }
 
 // ========== ГЛАВНАЯ ==========
@@ -217,28 +111,68 @@ function showHome() {
         const inFav = favorites.some(f => f.id === product.id);
         html += `
             <div class="product-card" onclick="showProductDetails(${product.id})">
-                <div class="product-image ${isAdmin() ? 'admin-mode' : ''}" onclick="event.stopPropagation(); ${isAdmin() ? `uploadProductImage(${product.id})` : ''}">
-                    ${product.image}
-                </div>
+                <div class="product-image">${product.image}</div>
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
-                <div class="stock-indicator in-stock">✅ ${product.stock}</div>
+                <div class="stock-indicator">✅ ${product.stock}</div>
                 <div style="display: flex; gap: 5px;" onclick="event.stopPropagation()">
-                    <button class="add-to-cart" style="flex: 2;" onclick="addToCart(${product.id})">🛒 В корзину</button>
-                    <button class="add-to-cart" style="flex: 1; background: ${inFav ? '#ff6b6b' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}" onclick="toggleFavorite(${product.id})">
+                    <button class="add-to-cart" onclick="addToCart(${product.id})">🛒 В корзину</button>
+                    <button class="add-to-cart" style="background: ${inFav ? '#ff4444' : '#333'}" onclick="toggleFavorite(${product.id})">
                         ${inFav ? '❤️' : '🤍'}
                     </button>
                 </div>
                 ${isAdmin() ? `
-                <div class="admin-controls" onclick="event.stopPropagation()">
-                    <button class="admin-btn edit-btn" onclick="quickEditProduct(${product.id})">✏️ Ред.</button>
-                    <button class="admin-btn delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
+                <div style="display:flex; gap:5px; margin-top:10px;">
+                    <button onclick="quickEditProduct(${product.id})">✏️</button>
+                    <button onclick="deleteProduct(${product.id})">🗑️</button>
                 </div>` : ''}
             </div>
         `;
     });
     html += '</div>';
     content.innerHTML = html;
+}
+
+// ========== ДЕТАЛЬНАЯ СТРАНИЦА ==========
+function showProductDetails(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    const inFav = favorites.some(f => f.id === product.id);
+    const content = document.getElementById('main-content');
+    content.innerHTML = `
+        <div class="product-details-page">
+            <button class="back-button" onclick="showHome()">
+                <i class="fas fa-arrow-left"></i> Назад
+            </button>
+            
+            <div class="product-details-card">
+                <div class="product-details-image">
+                    ${product.image}
+                </div>
+                
+                <h2 class="product-details-title">${product.name}</h2>
+                <div class="product-details-price">${product.price} ₽</div>
+                
+                <div class="product-details-stock">
+                    ✅ В наличии: ${product.stock} шт
+                </div>
+                
+                <div class="product-details-desc">
+                    <h3>Описание</h3>
+                    <p>${product.desc}</p>
+                </div>
+                
+                <div class="product-details-actions">
+                    <button class="add-to-cart-btn" onclick="addToCart(${product.id})">
+                        🛒 Добавить в корзину
+                    </button>
+                    <button class="favorite-btn ${inFav ? 'active' : ''}" onclick="toggleFavorite(${product.id})">
+                        ${inFav ? '❤️' : '🤍'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // ========== ИЗБРАННОЕ ==========
@@ -266,7 +200,9 @@ function showFavorites() {
                 <div class="product-image">${product.image}</div>
                 <div class="product-title">${product.name}</div>
                 <div class="product-price">${product.price} ₽</div>
-                <button class="add-to-cart" onclick="addToCart(${product.id})">🛒 В корзину</button>
+                <button class="add-to-cart" onclick="event.stopPropagation(); addToCart(${product.id})">
+                    🛒 В корзину
+                </button>
             </div>
         `;
     });
@@ -283,7 +219,7 @@ function showCart() {
     if (cart.length === 0) {
         content.innerHTML = `
             <div class="empty-state">
-                <i class="fas fa-box-open" style="color: #4ECDC4;"></i>
+                <i class="fas fa-gift" style="color: #4ECDC4;"></i>
                 <h3>Корзина пуста</h3>
                 <p>Добавьте товары из каталога</p>
                 <button onclick="navigateTo('home')">Вернуться к покупкам</button>
@@ -318,7 +254,7 @@ function showCart() {
                 <div class="cart-item-info">
                     <h4>${item.name}</h4>
                     <div>
-                        <span style="color: #667eea; font-weight: 600;">${item.price} ₽</span>
+                        <span style="font-weight:600;">${item.price} ₽</span>
                         ${item.count > 1 ? `<span class="old-price">${itemTotal} ₽</span>` : ''}
                     </div>
                 </div>
@@ -369,7 +305,7 @@ function showProfile() {
 
     let ordersHtml = '';
     if (user.orders.length === 0) {
-        ordersHtml = '<p style="text-align:center; color:#888; padding:20px;">У вас пока нет заказов</p>';
+        ordersHtml = '<p style="text-align:center; color:#999; padding:20px;">У вас пока нет заказов</p>';
     } else {
         ordersHtml = user.orders.map(order => `
             <div class="order-item">
@@ -410,7 +346,58 @@ function showProfile() {
     `;
 }
 
-// ========== ОФОРМЛЕНИЕ ЗАКАЗА ==========
+// ========== РОЗЫГРЫШ ==========
+function showRaffle() {
+    tg.openTelegramLink('https://t.me/c/3867496075/42');
+}
+
+// ========== ПОИСК ==========
+function showSearch() {
+    currentPage = 'search';
+    toggleFilters(false);
+    const content = document.getElementById('main-content');
+    content.innerHTML = `
+        <div class="search-page" style="padding:15px;">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="searchInput" placeholder="🔍 Поиск товаров..." style="flex:1; padding:12px; border:1px solid #ddd; border-radius:8px;">
+                <button onclick="performSearch()" style="padding:12px 20px; background:#333; color:white; border:none; border-radius:8px;">Найти</button>
+            </div>
+            <div id="searchResults"></div>
+        </div>
+    `;
+    document.getElementById('searchInput').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+}
+
+function performSearch() {
+    const query = document.getElementById('searchInput')?.value.toLowerCase().trim();
+    if (!query) return;
+    const results = products.filter(p =>
+        p.name.toLowerCase().includes(query) ||
+        p.desc.toLowerCase().includes(query)
+    );
+    const resultsDiv = document.getElementById('searchResults');
+    if (results.length === 0) {
+        resultsDiv.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><h3>Ничего не найдено</h3></div>`;
+        return;
+    }
+    let html = '<div class="products-grid">';
+    results.forEach(product => {
+        html += `
+            <div class="product-card" onclick="showProductDetails(${product.id})">
+                <div class="product-image">${product.image}</div>
+                <div class="product-title">${product.name}</div>
+                <div class="product-price">${product.price} ₽</div>
+                <button class="add-to-cart" onclick="event.stopPropagation(); addToCart(${product.id})">🛒 В корзину</button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+}
+
+// ========== ОФОРМЛЕНИЕ ЗАКАЗА С КАРТОЙ ==========
 function startCheckout() {
     checkoutStep = 1;
     deliveryState = { place: null, address: '', date: null, time: null };
@@ -422,31 +409,83 @@ function showDeliveryMap() {
     content.innerHTML = `
         <div class="checkout-screen">
             <h2 class="screen-title">Где заберете заказ?</h2>
-            <div class="map-container">
-                <!-- Точка 1: Театральная, 30 -->
-                <div class="map-marker" style="top: 40%; left: 30%;" onclick="selectDeliveryPlace('ул. Театральная, д. 30')">
-                    📍
-                    <span class="marker-info">ул. Театральная, д. 30</span>
-                </div>
-                <!-- Точка 2: Советский пр., 8 -->
-                <div class="map-marker" style="top: 60%; left: 60%;" onclick="selectDeliveryPlace('Советский проспект, 8')">
-                    📍
-                    <span class="marker-info">Советский проспект, 8</span>
-                </div>
-            </div>
-            <button class="continue-btn" id="mapContinueBtn" onclick="nextCheckoutStep()" disabled>Выберите точку на карте</button>
+            
+            <!-- Яндекс Карта -->
+            <div id="map" style="width:100%; height:350px; margin-bottom:20px; border-radius:12px; overflow:hidden;"></div>
+            
+            <button class="continue-btn" id="mapContinueBtn" onclick="nextCheckoutStep()" disabled>
+                Выберите точку на карте
+            </button>
         </div>
     `;
+
+    // Загружаем Яндекс Карты с ТВОИМ КЛЮЧОМ
+    const script = document.createElement('script');
+    script.src = "https://api-maps.yandex.ru/2.1/?apikey=d09bda33-f82a-4501-bfe6-84a386cf1f34&lang=ru_RU";
+    script.onload = initMap;
+    document.head.appendChild(script);
 }
 
-function selectDeliveryPlace(place) {
-    deliveryState.place = place;
-    document.getElementById('mapContinueBtn').disabled = false;
-    document.getElementById('mapContinueBtn').innerText = 'Продолжить';
+function initMap() {
+    if (!window.ymaps) return;
+
+    ymaps.ready(() => {
+        const map = new ymaps.Map("map", {
+            center: [54.746, 55.988], // Координаты Калининграда
+            zoom: 12
+        });
+
+        // Точка 1: ул. Театральная, 30
+        const place1 = new ymaps.Placemark(
+            [54.746, 55.988],
+            {
+                balloonContent: 'ул. Театральная, 30',
+                hintContent: 'ул. Театральная, 30'
+            },
+            {
+                preset: 'islands#redDotIcon',
+                draggable: false
+            }
+        );
+
+        // Точка 2: Советский проспект, 8
+        const place2 = new ymaps.Placemark(
+            [54.756, 55.978],
+            {
+                balloonContent: 'Советский проспект, 8',
+                hintContent: 'Советский проспект, 8'
+            },
+            {
+                preset: 'islands#redDotIcon',
+                draggable: false
+            }
+        );
+
+        // Добавляем точки на карту
+        map.geoObjects.add(place1);
+        map.geoObjects.add(place2);
+
+        // Обработчики кликов
+        place1.events.add('click', () => {
+            deliveryState.place = 'ул. Театральная, 30';
+            document.getElementById('mapContinueBtn').disabled = false;
+            document.getElementById('mapContinueBtn').innerText = 'Продолжить';
+        });
+
+        place2.events.add('click', () => {
+            deliveryState.place = 'Советский проспект, 8';
+            document.getElementById('mapContinueBtn').disabled = false;
+            document.getElementById('mapContinueBtn').innerText = 'Продолжить';
+        });
+    });
 }
 
 function nextCheckoutStep() {
     if (checkoutStep === 1) {
+        if (!deliveryState.place) {
+            alert('Выберите точку на карте');
+            return;
+        }
         checkoutStep = 2;
         showDateTimeSelection();
     } else if (checkoutStep === 2) {
@@ -493,14 +532,14 @@ function showPaymentSelection() {
         <div class="checkout-screen">
             <h2 class="screen-title">Как оплатите?</h2>
             
-            <div class="delivery-option selected" onclick="selectPayment('Наличные')">
+            <div class="delivery-option" onclick="selectPayment('Наличные')" style="cursor:pointer;">
                 <span>💵 Наличными</span>
                 <p style="color:#666; margin-top:5px;">Строго наличные</p>
             </div>
             
             <div class="delivery-option" style="margin-top:20px;">
                 <h4>📝 Примечание к заказу</h4>
-                <textarea id="orderComment" placeholder="Комментарии к заказу" rows="3" style="width:100%; padding:12px; border:1px solid #f0f0f0; border-radius:10px;"></textarea>
+                <textarea id="orderComment" placeholder="Комментарии к заказу" rows="3" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></textarea>
                 <small style="color:#999;">Мы передадим эту информацию продавцу</small>
             </div>
             
@@ -517,6 +556,11 @@ function finishCheckout() {
     const deliveryDate = document.getElementById('deliveryDate')?.value || 'Не выбрано';
     const deliveryTime = document.getElementById('deliveryTime')?.value || 'Не выбрано';
     const comment = document.getElementById('orderComment')?.value || '';
+
+    if (!deliveryState.place) {
+        alert('Выберите точку на карте');
+        return;
+    }
 
     const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
     const discount = appliedPromo ? subtotal * 0.05 : 0;
@@ -548,6 +592,7 @@ function finishCheckout() {
     };
 
     user.orders.push(order);
+    saveUserData();
 
     const orderText = `🆕 **НОВЫЙ ЗАКАЗ!**\n\n👤 **Клиент:** @${user.username} (${user.firstName})\n\n📦 **Заказ:**\n${itemsList}\n💰 **Сумма:** ${total} ₽\n📍 **Место:** ${deliveryState.place}\n📅 **Дата:** ${deliveryDate}\n⏰ **Время:** ${deliveryTime}\n${appliedPromo ? `🎫 **Промокод:** ${appliedPromo}\n` : ''}\n📝 **Пожелание:**\n${comment || '—'}\n\n🕐 **Время заказа:** ${order.date}`;
 
@@ -573,21 +618,23 @@ function finishCheckout() {
     appliedPromo = null;
     updateCartBadge();
 
-    showNotification('✅ Заказ отправлен! Менеджер свяжется с вами');
+    alert('✅ Заказ отправлен! Менеджер свяжется с вами');
     navigateTo('home');
 }
 
-// ========== РОЗЫГРЫШ ==========
-function showRaffle() {
-    tg.openTelegramLink('https://t.me/c/3867496075/42');
+function saveUserData() {
+    localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
+    localStorage.setItem(`fav_${user.id}`, JSON.stringify(favorites));
+    localStorage.setItem(`orders_${user.id}`, JSON.stringify(user.orders));
 }
 
-// ========== ДЕЙСТВИЯ С ТОВАРАМИ ==========
+// ========== ДЕЙСТВИЯ ==========
 function addToCart(productId) {
     const product = products.find(p => p.id === productId);
     cart.push({...product});
+    saveUserData();
     updateCartBadge();
-    showNotification(`${product.name} добавлен в корзину`);
+    alert(`${product.name} добавлен в корзину`);
 }
 
 function updateCartItem(productId, delta) {
@@ -598,6 +645,7 @@ function updateCartItem(productId, delta) {
     } else {
         cart.splice(index, 1);
     }
+    saveUserData();
     updateCartBadge();
     showCart();
 }
@@ -605,6 +653,7 @@ function updateCartItem(productId, delta) {
 function clearCart() {
     cart = [];
     appliedPromo = null;
+    saveUserData();
     updateCartBadge();
     showCart();
 }
@@ -618,30 +667,24 @@ function toggleFavorite(productId) {
     const index = favorites.findIndex(f => f.id === productId);
     if (index === -1) {
         favorites.push({...product});
-        showNotification('❤️ Добавлено в избранное');
+        alert('❤️ Добавлено в избранное');
     } else {
         favorites.splice(index, 1);
-        showNotification('💔 Удалено из избранного');
+        alert('💔 Удалено из избранного');
     }
+    saveUserData();
+    if (currentPage === 'favorites') showFavorites();
 }
 
 function applyPromo() {
     const input = document.getElementById('promoInput');
     const code = input.value.trim();
     if (code === user.promoCode) {
-        showNotification('❌ Нельзя использовать свой промокод');
+        alert('❌ Нельзя использовать свой промокод');
         return;
     }
     appliedPromo = code || null;
     showCart();
-}
-
-function showNotification(text) {
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = text;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 2000);
 }
 
 // ========== АДМИНКА ==========
@@ -658,7 +701,6 @@ function quickEditProduct(productId) {
     if (newDesc) product.desc = newDesc;
     saveToServer();
     showHome();
-    showNotification('✅ Товар обновлен');
 }
 
 function deleteProduct(id) {
@@ -667,7 +709,6 @@ function deleteProduct(id) {
         products = products.filter(p => p.id !== id);
         saveToServer();
         showHome();
-        showNotification('✅ Товар удален');
     }
 }
 
@@ -686,27 +727,6 @@ function addNewProduct() {
     });
     saveToServer();
     showHome();
-    showNotification('✅ Товар добавлен');
-}
-
-function uploadProductImage(productId) {
-    if (!isAdmin()) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const product = products.find(p => p.id === productId);
-            product.image = event.target.result;
-            saveToServer();
-            showNotification('✅ Фото загружено');
-            showHome();
-        };
-        reader.readAsDataURL(file);
-    };
-    input.click();
 }
 
 // ========== ФИЛЬТРЫ ==========
@@ -768,44 +788,32 @@ overlay?.addEventListener('click', () => {
 function updateSideMenu() {
     const menuItems = document.querySelector('.side-menu-items');
     if (!menuItems) return;
-    const themeIcon = darkMode ? 'fa-sun' : 'fa-moon';
-    const themeText = darkMode ? 'Светлая тема' : 'Темная тема';
     menuItems.innerHTML = `
         <a href="https://t.me/+ydkHgm09g5hhOTMy" target="_blank" class="side-menu-item">
             <i class="fab fa-telegram"></i>
             <span>Наш канал Telegram</span>
-            <i class="fas fa-external-link-alt external-icon"></i>
         </a>
         <div class="side-menu-item" onclick="showAbout()">
             <i class="fas fa-info-circle"></i>
             <span>О нас</span>
         </div>
-        <div class="side-menu-item" onclick="toggleTheme()">
-            <i class="fas ${themeIcon}"></i>
-            <span>${themeText}</span>
-        </div>
     `;
 }
 
 function showAbout() {
-    closeMenuFunc();
+    sideMenu.classList.remove('open');
+    overlay.classList.remove('show');
     const content = document.getElementById('main-content');
     content.innerHTML = `
-        <div style="padding: 30px 20px; text-align: center;">
+        <div style="padding: 30px; text-align: center;">
             <h2 style="margin-bottom: 20px;">О нас</h2>
-            <p style="color: #666; line-height: 1.6;">По всем вопросам пишите @fog_shop_manager</p>
+            <p style="color: #666;">По всем вопросам пишите @fog_shop_manager</p>
         </div>
     `;
 }
 
-function closeMenuFunc() {
-    sideMenu.classList.remove('open');
-    overlay.classList.remove('show');
-}
-
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 (function init() {
-    applyTheme();
     setInterval(loadFromServer, 3000);
     loadFromServer();
     showHome();
